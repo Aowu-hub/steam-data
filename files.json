@@ -1,7 +1,7 @@
 {
  "app": "STEAM Playground",
- "version": "v2026.11.20-2320",
- "built": "2026-11-20T16:22:12.728Z",
+ "version": "v2026.11.20-2324",
+ "built": "2026-11-20T16:25:40.589Z",
  "routes": {
   "home": "index.html",
   "gameroom": "gameroom.html",
@@ -66,7 +66,7 @@
   "app/boot.js": "6876507df79d1de4",
   "app/offline-ui.js": "3f03e16aaa3bc70d",
   "app/server.js": "35166abb8ba8ec3e",
-  "app/version.js": "3c0cdaf9a50bdb28",
+  "app/version.js": "ed85970a2f3a4727",
   "artifactory.html": "3f91fc20db75962a",
   "avatarealm.html": "2a781e0ba34fc1f5",
   "avateer.html": "03af5d0e9b833508",
@@ -109,7 +109,7 @@
   "fxgallery.html": "00a4220ed2bbc729",
   "gameroom.html": "f43356be91db9535",
   "georead.html": "2bbcb5f0211bbe38",
-  "geoscout.html": "1f25c3293fe78800",
+  "geoscout.html": "ec1bd2b9cdd2ea3d",
   "guest.json": "422946bd76499057",
   "hopper.html": "cd1af5c322d7704c",
   "icons/favicon-32.png": "11dab84cca23507c",
