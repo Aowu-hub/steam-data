@@ -1,6 +1,7 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
+  "CreatureSea.d100fd7ef9.1.js": "2026-11-20T19:13:27.328Z",
   "MotionCreature.00eae89131.1.js": "2026-11-20T18:49:06.804Z",
   "MotionFX2.63acb1bbda.1.js": "2026-11-20T18:49:06.804Z"
  }
