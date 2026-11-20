@@ -1,8 +1,17 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
+  "BrawlBuddies.bc90687d5c.1.css": "2026-11-20T19:25:29.035Z",
+  "BrawlBuddies.bc90687d5c.2.js": "2026-11-20T19:25:29.035Z",
+  "BrawlBuddies.bc90687d5c.3.js": "2026-11-20T19:25:29.035Z",
+  "BrawlBuddies.bc90687d5c.4.js": "2026-11-20T19:25:29.035Z",
+  "BrawlBuddies.bc90687d5c.5.js": "2026-11-20T19:25:29.035Z",
+  "BrawlBuddies.bc90687d5c.6.js": "2026-11-20T19:25:29.035Z",
   "CreatureSea.d100fd7ef9.1.js": "2026-11-20T19:13:27.328Z",
+  "LinkPads.e42a8403e4.1.js": "2026-11-20T19:25:29.035Z",
   "MotionCreature.00eae89131.1.js": "2026-11-20T18:49:06.804Z",
-  "MotionFX2.63acb1bbda.1.js": "2026-11-20T18:49:06.804Z"
+  "MotionFX2.63acb1bbda.1.js": "2026-11-20T18:49:06.804Z",
+  "Station.7103ac9229.1.css": "2026-11-20T19:25:29.035Z",
+  "Station.7103ac9229.2.js": "2026-11-20T19:25:29.035Z"
  }
 }
