@@ -1,6 +1,12 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
-  "MotionFX2.23dc983cbf.1.js": "2026-11-21T02:56:55.041Z"
+  "MotionFX2.23dc983cbf.1.js": "2026-11-21T02:56:55.041Z",
+  "Station.21b6fc77c7.1.css": "2026-11-21T03:00:01.324Z",
+  "Station.21b6fc77c7.2.js": "2026-11-21T03:00:01.324Z",
+  "Turbo.19d564fff5.1.css": "2026-11-21T03:00:01.324Z",
+  "Turbo.19d564fff5.2.js": "2026-11-21T03:00:01.324Z",
+  "Turbo.19d564fff5.3.js": "2026-11-21T03:00:01.324Z",
+  "Turbo.19d564fff5.4.js": "2026-11-21T03:00:01.324Z"
  }
 }
