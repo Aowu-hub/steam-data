@@ -1,12 +1,18 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
+  "Achievements.99f17413a9.1.css": "2026-11-21T03:09:17.992Z",
+  "Achievements.99f17413a9.2.js": "2026-11-21T03:09:17.992Z",
   "MotionFX2.23dc983cbf.1.js": "2026-11-21T02:56:55.041Z",
   "Station.21b6fc77c7.1.css": "2026-11-21T03:00:01.324Z",
   "Station.21b6fc77c7.2.js": "2026-11-21T03:00:01.324Z",
   "Turbo.19d564fff5.1.css": "2026-11-21T03:00:01.324Z",
   "Turbo.19d564fff5.2.js": "2026-11-21T03:00:01.324Z",
   "Turbo.19d564fff5.3.js": "2026-11-21T03:00:01.324Z",
-  "Turbo.19d564fff5.4.js": "2026-11-21T03:00:01.324Z"
+  "Turbo.19d564fff5.4.js": "2026-11-21T03:00:01.324Z",
+  "UiKit.65073a3047.1.css": "2026-11-21T03:09:17.992Z",
+  "UiKit.65073a3047.2.js": "2026-11-21T03:09:17.992Z",
+  "UiKitPlay.ab6bd9eeec.1.js": "2026-11-21T03:09:17.992Z",
+  "UiKitPlay.ab6bd9eeec.2.js": "2026-11-21T03:09:17.992Z"
  }
 }
