@@ -1,6 +1,11 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
+  "BlasOff.07b5e7f883.1.css": "2026-11-21T13:20:43.088Z",
+  "BlasOff.07b5e7f883.2.js": "2026-11-21T13:20:43.088Z",
+  "BlasOff.07b5e7f883.3.js": "2026-11-21T13:20:43.088Z",
+  "BlasOff.07b5e7f883.4.js": "2026-11-21T13:20:43.088Z",
+  "BlasOff.07b5e7f883.5.js": "2026-11-21T13:20:43.088Z",
   "BrawlBuddies_link.9e14543225.1.js": "2026-11-21T10:24:41.522Z",
   "BrawlBuddies_screens.bed3125304.1.js": "2026-11-21T12:34:18.133Z",
   "LinkKit.1171e281bd.1.js": "2026-11-21T10:24:41.522Z",
