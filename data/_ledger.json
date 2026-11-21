@@ -1,6 +1,14 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
+  "BlasOff.b689f61f4a.1.css": "2026-11-21T16:34:28.418Z",
+  "BlasOff.b689f61f4a.2.js": "2026-11-21T16:34:28.418Z",
+  "BlasOff.b689f61f4a.3.js": "2026-11-21T16:34:28.418Z",
+  "BlasOff.b689f61f4a.4.js": "2026-11-21T16:34:28.418Z",
+  "BlasOff.b689f61f4a.5.js": "2026-11-21T16:34:28.418Z",
+  "BlasOffFrame.c43920b453.1.css": "2026-11-21T16:34:28.418Z",
+  "BlasOffFrame.c43920b453.2.js": "2026-11-21T16:34:28.418Z",
+  "BlasOffMotion.42f836a235.1.js": "2026-11-21T16:34:28.418Z",
   "EventKit.b0d6adaf26.1.js": "2026-11-21T16:31:26.459Z",
   "GameCovers.93f2b26a7d.1.js": "2026-11-21T16:31:26.459Z",
   "Landing.67685b8ff5.1.css": "2026-11-21T16:31:26.459Z",
