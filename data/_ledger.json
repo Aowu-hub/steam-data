@@ -1,6 +1,12 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
-  "GameLogos.201bef0fd5.1.js": "2026-11-22T04:12:54.482Z"
+  "GameLogos.201bef0fd5.1.js": "2026-11-22T04:12:54.482Z",
+  "PyraDive.909a389a3e.1.css": "2026-11-22T04:24:31.491Z",
+  "PyraDive.909a389a3e.2.js": "2026-11-22T04:24:31.491Z",
+  "PyraDive.909a389a3e.3.js": "2026-11-22T04:24:31.491Z",
+  "PyraDive.909a389a3e.4.js": "2026-11-22T04:24:31.491Z",
+  "Station.31ecadcff1.1.css": "2026-11-22T04:24:31.491Z",
+  "Station.31ecadcff1.2.js": "2026-11-22T04:24:31.491Z"
  }
 }
