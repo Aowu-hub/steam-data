@@ -1,18 +1,6 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
-  "AvataRealm.7353d8ea09.1.css": "2026-11-22T09:57:07.794Z",
-  "AvataRealm.7353d8ea09.2.js": "2026-11-22T09:57:07.794Z",
-  "AvataRealmEngine.8cdbad2e07.1.js": "2026-11-22T09:57:07.794Z",
-  "AvataRealmSkills.6d05d921b0.1.js": "2026-11-22T09:57:07.794Z",
-  "BlasOff_link.4c8a086089.1.js": "2026-11-22T12:06:51.760Z",
-  "BrawlBuddies_screens.7fa7b850e5.1.js": "2026-11-22T09:16:41.681Z",
-  "LinkKit.376a29de87.1.js": "2026-11-22T09:16:41.681Z",
-  "LinkKit.376a29de87.2.css": "2026-11-22T09:16:41.681Z",
-  "LinkKit.376a29de87.3.js": "2026-11-22T09:16:41.681Z",
-  "LinkKit.376a29de87.4.js": "2026-11-22T09:16:41.681Z",
-  "LinkKit.376a29de87.5.css": "2026-11-22T09:16:41.681Z",
-  "LinkKit.376a29de87.6.js": "2026-11-22T09:16:41.681Z",
-  "PyraDive_link.8c11e3320b.1.js": "2026-11-22T12:06:51.760Z"
+  "BlasOffMotion.6fcb9d6359.1.js": "2026-11-22T18:58:36.293Z"
  }
 }
