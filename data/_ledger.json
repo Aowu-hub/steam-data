@@ -1,6 +1,9 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
+  "Gameroom.22d676496d.1.css": "2026-11-27T20:19:49.867Z",
+  "Gameroom.22d676496d.2.js": "2026-11-27T20:19:49.867Z",
+  "Gameroom.22d676496d.3.js": "2026-11-27T20:19:49.867Z",
   "IsoLook_isle1c.483b5ac757.1.js": "2026-11-27T20:16:31.104Z",
   "IsoProps.064610a475.1.js": "2026-11-27T20:16:31.104Z"
  }
