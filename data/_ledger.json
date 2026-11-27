@@ -1,6 +1,11 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
+  "Avateer.d09382db2f.1.css": "2026-11-27T11:37:55.449Z",
+  "Avateer.d09382db2f.2.js": "2026-11-27T11:37:55.449Z",
+  "Avateer.d09382db2f.3.js": "2026-11-27T11:37:55.449Z",
+  "AvateerIsle1.b56a5607dc.1.js": "2026-11-27T11:37:55.449Z",
+  "AvateerStory_il1.a8b79497c1.1.js": "2026-11-27T11:37:55.449Z",
   "GeoScout.4a95e0bb75.1.css": "2026-11-27T11:03:41.166Z",
   "GeoScout.4a95e0bb75.2.js": "2026-11-27T11:03:41.166Z",
   "GeoScout.4a95e0bb75.3.js": "2026-11-27T11:03:41.166Z",
