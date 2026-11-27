@@ -1,6 +1,10 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
-  "BlasOffMotion.6fcb9d6359.1.js": "2026-11-22T18:58:36.293Z"
+  "AvatarActing.054f110517.1.js": "2026-11-27T00:10:34.683Z",
+  "AvatarMotion.9da6694ae5.1.js": "2026-11-27T00:10:34.683Z",
+  "MotionFX2.35ebde3845.1.js": "2026-11-27T00:10:34.683Z",
+  "MotionGround.485005edfb.1.js": "2026-11-27T00:10:34.683Z",
+  "MotionTurn.10bc2cefd1.1.js": "2026-11-27T00:10:34.683Z"
  }
 }
