@@ -1,0 +1,52 @@
+
+/* 🇹🇭 AvateerIsle1 — Island 1 "Elephant Jungle" islet data for AvWorld.build('il1') (av-s1a, 🧳 Avateer Development chat · av-s2a: 1.5× bigger, Aowu 2026-11-27 20:37).
+   ① 🛶 Landing Village — crescent harbour (the bay bites the SE side, dock + boat in it) · the sand bar leaves its N rim · ② 🥭 Mango Grove — a round grove N of it, a 3-wide river
+   splits off its E strip (🦘 stepping stones → the hidden 🥭 chest) · the N rim notch (🦘 rope-bridge gap) → the rope bridge north → islet ③ (AvateerIsle1b, AvWorld.extend).
+   av-s2a: every S1 point = old × 1.5 + (0, 48) (from1 below — AvWorld.fromV1 moves an old save's position once); rows north of y 48 belong to islet ③.
+   Every prop row passes Props.fits (the s2a test keeps W.miss empty). Coordinates: x, y in tiles (map w × h); a prop row = [key, i, j, {turn, state, v, id}]. */
+(function(){
+'use strict';
+if(!window.AvWorld) return;
+const LAND = {id: "landing", name: "Landing Village", th: "หมู่บ้านท่าเรือ", cx: 21.75, cy: 111, r: 20.1, bay: {"x": 38.25, "y": 128.25, "r": 10.2}, wob: 0.025, beach: 0.92, paths: [[[29.25, 117.75], [18.75, 117.75], [18.75, 107.25], [27.75, 107.25], [27.75, 99.75], [25.95, 93.3]], [[18.75, 107.25], [11.25, 107.25], [11.25, 111.9]]], hero: {"mark": "temple", "title": ["🛶 Landing Village", "🛶 หมู่บ้านท่าเรือ"], "hook": ["Home of Grandma Noi — and a temple elephant, fast asleep.", "บ้านของยายน้อย — กับช้างวัดที่หลับปุ๋ย"]}};
+const MANGO = {id: "mango", name: "Mango Grove", th: "สวนมะม่วง", cx: 31.5, cy: 67.5, r: 19.2, wob: 0.03, beach: 0.93, paths: [[[27.6, 85.8], [26.25, 78.75], [23.25, 72.75], [24.75, 65.25], [32.25, 62.25], [35.4, 62.25]], [[26.25, 78.75], [32.25, 75.75], [35.1, 71.25]]], tiles: [{"t": "water", "pts": [[39.5, 46], [39.5, 89]], "w": 1.15}, {"t": "water", "at": [[28, 48], [29, 48], [30, 48], [28, 49], [29, 49], [30, 49]]}], hero: {"big": {"key": "mango", "scale": 2.4, "at": [34, 64], "foot": 2, "v": 1}, "title": ["🥭 Mango Grove", "🥭 สวนมะม่วง"], "hook": ["The Great Mango Tree shades Pudding's favourite bath.", "ต้นมะม่วงยักษ์ให้ร่มบ่ออาบน้ำของพุดดิ้ง"]}};
+AvWorld.island('il1', {id: 'il1', name: 'Elephant Jungle', th: 'ป่าช้าง', ch: 1, look: 'jungle', w: 54, h: 136, base: 2.6, mapV: 2, from1: {k: 1.5, ox: 0, oy: 48},
+  theme: {"key": "jungle", "base": "meadow", "def": {"base": "#8A5A36", "baseDark": "#5E3C22", "bg": ["#BDEBFF", "#FFF6DE"], "tile": {"grass": {"top": "#7BC95A", "top2": "#6BBB4C", "lip": "#5CA942", "side": "#8A5A36"}, "flower": {"top": "#82CE60", "top2": "#73C152", "lip": "#5CA942", "side": "#8A5A36"}, "path": {"top": "#E2B07A", "top2": "#D6A26A", "side": "#A8754A", "deco": "pebble"}, "water": {"top": "#4FC6D8", "top2": "#3FB8CC", "side": "#2F8FA8"}, "sand": {"top": "#F3D99A", "top2": "#EACD88", "side": "#C9A46A"}, "stone": {"top": "#BDB6A2", "top2": "#ADA692", "side": "#857E6C"}}}},
+  islets: [LAND, MANGO],
+  bars: [{"pts": [[25.8, 93.6], [27.6, 84.9]], "w": 1.35}],
+  needs: ['trail', 'touch', 'isle1'],
+  later: ['g.gap'],   // grey until the m3 brain chest opens (av-s1c: AvateerVillage opens it)
+  props: [
+    ["inn_thai", 9, 108, {"turn": 0, "id": "inn"}], ["stall_thai", 14, 113, {"turn": 0, "v": 1, "id": "stall"}], ["smithy_thai", 21, 110, {"turn": 0, "id": "smithy"}], ["qboard_thai", 15, 105, {"id": "board"}], ["il1_elephantyard", 8, 96, {"state": "calm", "id": "yard"}],
+    ["il1_pethouse", 14, 98, {"id": "pethouse"}], ["il1_cookstation", 20, 101, {"state": "cooking", "id": "cook"}], ["il1_kruring", 30, 110, {"state": "training", "id": "ring"}], ["il1_ricefield", 3, 114, {"state": "young"}], ["il1_ricefield", 6, 119, {"state": "gold", "v": 1}],
+    ["il1_paradestop", 30, 102, {"id": "parade"}], ["il1_cocoshack", 38, 113, {"turn": 1, "id": "shack"}], ["elephant", 21, 93, {"turn": 1, "id": "temple"}], ["well_thai", 23, 104], ["lantern_thai", 17, 116],
+    ["lantern_thai", 26, 105], ["lantern_thai", 29, 116], ["signpost", 29, 98, {"id": "sign"}], ["palm", 5, 104], ["palm", 11, 125, {"v": 1}],
+    ["banana", 12, 126, {"v": 2}], ["palm", 32, 95], ["palm", 38, 102, {"v": 1}], ["banana", 41, 107], ["palm", 24, 128],
+    ["palm", 18, 129, {"v": 2}], ["banana", 2, 108], ["jtree", 11, 102], ["bush", 26, 95, {"v": 1}], ["jtree", 5, 101],
+    ["bush", 17, 95], ["jtree", 33, 107, {"v": 1}], ["crates", 33, 117], ["flowers", 12, 117], ["flowers", 24, 114],
+    ["rock", 9, 122], ["dock", 30, 120, {"turn": 1, "id": "dock"}], ["gate_jump_puddles", 21, 117, {"turn": 0, "id": "g.puddles"}], ["mango", 20, 77], ["mango", 30, 80, {"v": 1}],
+    ["mango", 17, 68], ["mango", 29, 57, {"v": 1}], ["mango", 20, 59], ["mango", 33, 68], ["mango", 14, 74, {"v": 1}],
+    ["mango", 26, 53], ["bamboo", 15, 62], ["bamboo", 35, 54], ["bamboo", 21, 83], ["banana", 32, 84],
+    ["banana", 14, 66, {"v": 1}], ["banana", 35, 78, {"v": 2}], ["bush", 18, 72], ["rock", 27, 72], ["log", 23, 68],
+    ["flowers", 29, 75], ["flowers", 21, 63], ["il1_bathpond", 26, 65, {"state": "calm", "id": "pond"}], ["chest", 30, 72, {"id": "brainchest1"}], ["il1_fireflyarch", 17, 80, {"id": "arch"}],
+    ["il1_deepstream", 38, 75, {"state": "deep", "id": "stream"}], ["gate_jump_stones", 38, 62, {"turn": 0, "id": "g.stones"}], ["chest", 45, 65, {"v": 1, "id": "mangochest"}], ["mango", 45, 69], ["mango", 47, 59, {"v": 1}],
+    ["bush", 44, 74], ["banana", 48, 63], ["gate_jump_gap", 28, 49, {"turn": 0, "id": "g.gap"}], ["mango", 30, 52], ["mango", 20, 56],
+    ["mango", 24, 56], ["mango", 32, 56], ["mango", 26, 60, {"v": 1}], ["banana", 34, 60], ["mango", 42, 60],
+    ["mango", 30, 68, {"v": 1}], ["mango", 42, 68, {"v": 1}], ["bush", 23, 53], ["bamboo", 17, 76], ["bamboo", 23, 81],
+    ["bamboo", 45, 58], ["bush", 42, 54], ["bamboo", 21, 80], ["bamboo", 43, 56], ["bamboo", 46, 75],
+    ["bamboo", 48, 67], ["bamboo", 15, 71], ["bush", 42, 80], ["bamboo", 32, 51], ["bush", 37, 82],
+    ["bush", 16, 60], ["bamboo", 29, 83], ["bamboo", 35, 83], ["bush", 47, 72], ["bush", 44, 78],
+    ["bamboo", 21, 54], ["bush", 18, 57], ["bush", 37, 52], ["bush", 16, 73], ["bush", 27, 51],
+    ["bush", 35, 51], ["bamboo", 46, 61], ["palm", 16, 126, {"v": 0}], ["palm", 34, 99, {"v": 2}], ["palm", 36, 105, {"v": 1}],
+    ["palm", 37, 108], ["banana", 13, 95], ["palm", 6, 107], ["palm", 5, 111, {"v": 0}], ["banana", 29, 95, {"v": 0}],
+    ["palm", 8, 102], ["palm", 39, 110, {"v": 1}], ["palm", 19, 126], ["banana", 21, 128, {"v": 2}], ["palm", 35, 102],
+    ["bush", 15, 121], ["bush", 24, 120], ["flowers", 18, 119], ["bush", 17, 99], ["flowers", 15, 102],
+    ["bush", 19, 104], ["flowers", 20, 114], ["bush", 21, 121], ["flowers", 27, 112], ["flowers", 24, 100],
+    ["bush", 29, 107], ["flowers", 18, 122], ["bush", 12, 121], ["bush", 14, 110], ["bush", 11, 105],
+    ["flowers", 9, 116], ["bush", 25, 109]
+  ],
+  /* 👾 av-s2a spawn table (AvWorld.rollGroup): Landing = home base, no monsters · Mango Grove 5 slots, Lv 2–4 · Monkeynip + ✨ Toucanoo after Main 3 */
+  spawns: [{zone: 'mango', n: 5, lv: [2, 4], minD: 7, away: 5, kinds: [['mangobble', 65], ['monkeynip', 25, 'il1.m3'], ['toucanoo', 10, 'il1.m3', 1]]}],
+  spots: {"start": [30.75, 120.75], "noi": [29.1, 115.95], "pudding": [30.3, 114.9], "tum": [11.25, 112.95], "lek": [15.75, 114.75], "lungdang": [23.4, 113.4], "krumai": [32.25, 113.4], "inn": [11.25, 112.2], "boat": [33.3, 122.7], "mango": [27.3, 81.75], "bar": [26.7, 89.4], "pond": [27.6, 68.7], "stream": [36.75, 75.9], "stones": [37.05, 62.25], "pudgrove": [24.9, 75.9], "mobsA": [29.7, 73.2], "mobsB": [21.9, 67.8], "tamemob": [23.4, 62.4], "noipath": [26.4, 80.1], "tara": [18.9, 71.7], "roam1": [30.9, 60.9], "roam2": [17.4, 64.8], "mg1": [20.7, 75], "mg2": [29.4, 78], "mg3": [32.1, 66], "kaikai": [6.9, 115.8], "paddy": [9.75, 119.25], "board": [15.75, 107.25], "pethouse": [14.4, 99.9], "herbs": [18.9, 69.9]},
+  people: {noi: 'noi', tum: 'tum', lek: 'lek', lungdang: 'lungdang', krumai: 'krumai'}
+});
+})();
