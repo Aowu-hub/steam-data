@@ -1,6 +1,11 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
+  "AvataRealm.2ae5e57a5b.1.css": "2026-11-27T04:03:20.204Z",
+  "AvataRealm.2ae5e57a5b.2.js": "2026-11-27T04:03:20.204Z",
+  "AvataRealmEngine.603d75a46f.1.js": "2026-11-27T04:03:20.204Z",
+  "AvataRealmLooks.d6549c4ba8.1.js": "2026-11-27T04:03:20.204Z",
+  "AvatarKit.f7565c8d47.1.js": "2026-11-27T04:03:20.204Z",
   "BlasOff.67f7e879f1.1.css": "2026-11-27T02:24:43.762Z",
   "BlasOff.67f7e879f1.2.js": "2026-11-27T02:24:43.762Z",
   "BlasOff.67f7e879f1.3.js": "2026-11-27T02:24:43.762Z",
