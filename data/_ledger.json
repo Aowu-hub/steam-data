@@ -1,8 +1,6 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
-  "AvatarActing.054f110517.1.js": "2026-11-27T00:10:34.683Z",
-  "AvatarMotion.9da6694ae5.1.js": "2026-11-27T00:10:34.683Z",
   "BlasOff.67f7e879f1.1.css": "2026-11-27T02:24:43.762Z",
   "BlasOff.67f7e879f1.2.js": "2026-11-27T02:24:43.762Z",
   "BlasOff.67f7e879f1.3.js": "2026-11-27T02:24:43.762Z",
@@ -31,9 +29,7 @@
   "GeoScout.ca1ab9970d.1.css": "2026-11-27T02:12:47.268Z",
   "GeoScout.ca1ab9970d.2.js": "2026-11-27T02:12:47.268Z",
   "GeoScout.ca1ab9970d.3.js": "2026-11-27T02:12:47.268Z",
-  "MotionFX2.35ebde3845.1.js": "2026-11-27T00:10:34.683Z",
-  "MotionGround.485005edfb.1.js": "2026-11-27T00:10:34.683Z",
-  "MotionTurn.10bc2cefd1.1.js": "2026-11-27T00:10:34.683Z",
+  "MotionCreature.c7dc72c519.1.js": "2026-11-27T03:16:38.367Z",
   "NumberSkins.151133dc13.1.js": "2026-11-27T03:01:55.524Z",
   "NumberSkins.ac72aea4d9.1.js": "2026-11-27T02:12:47.268Z",
   "SlaBrall.28a588ad20.1.css": "2026-11-27T00:32:16.345Z",
