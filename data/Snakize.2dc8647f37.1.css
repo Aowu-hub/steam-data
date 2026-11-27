@@ -123,7 +123,15 @@
   .pill{background:rgba(0,0,0,0.38);border:none;color:#fff;border-radius:14px;padding:6px 10px;font-family:'Fredoka',sans-serif;font-weight:700;font-size:0.88rem;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;min-height:38px;font-variant-numeric:tabular-nums;flex:0 0 auto;}
   button.pill{cursor:pointer;min-width:38px;justify-content:center;} button.pill:active{transform:translateY(2px);}
   .pill.lbl{flex:0 1 auto;min-width:0;display:block;overflow:hidden;text-overflow:ellipsis;line-height:26px;}
-  .gb-nano [data-k="m:grow"], .gb-nano [data-k="m:grow1"]{display:none !important;}   /* 🎛️ p1c: small phones — the 🐍 3/15 counter says the same */
+  .gb-nano [data-k="m:grow"], .gb-nano [data-k="m:grow1"]{display:none !important;}
+  /* 🎯 24zr: 2–4 riders = ONE race meter in the bar — a thin track per rider in the seat colour (red · blue · gold · purple, like the pads), shown on small phones too */
+  .gb-meter.sn-race{gap:4px;} .gb-meter.sn-race .gb-mt{display:inline-flex;flex-direction:column;justify-content:center;gap:2px;width:62px;height:auto;padding:1px 0;background:none;box-shadow:none;overflow:visible;border-radius:0;}
+  .sn-race .gb-mt s{display:block;position:relative;height:5px;border-radius:3px;border-left:4px solid var(--c);background:rgba(255,255,255,0.2);overflow:hidden;box-shadow:inset 0 1px 1px rgba(0,0,0,0.35);transition:opacity .3s;}
+  .sn-race.n2 .gb-mt s{height:6px;} .sn-race.n4 .gb-mt s{height:4px;}
+  .sn-race .gb-mt s u{display:block;height:100%;width:0;border-radius:0 3px 3px 0;background:var(--c);transition:width .3s;}
+  .sn-race .gb-mt s.lead{box-shadow:0 0 0 1px rgba(255,255,255,0.75), 0 0 7px var(--c);} .sn-race .gb-mt s.out{opacity:0.35;}
+  .gb-tiny .sn-race .gb-mt{width:48px;} .gb-nano .sn-race .gb-mt{width:38px;} .gb-nano .gb-meter.sn-race{gap:3px;}
+  .gb-nano .sn-race.n3 > i, .gb-nano .sn-race.n4 > i{display:none;}   /* small phones, 3–4 riders: the coloured rows say it, the 🎯 makes room */   /* 🎛️ p1c: small phones — the 🐍 3/15 counter says the same */
   .hud .grow{flex:1 1 auto;min-width:40px;height:14px;border-radius:8px;background:rgba(255,255,255,0.16);overflow:hidden;position:relative;}
   .hud .grow b{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#2FB862,#FFC845);border-radius:8px;transition:width .2s;}
   .hud .grow b.p2{top:50%;background:linear-gradient(90deg,#3D8BFD,#6EE7F9);}

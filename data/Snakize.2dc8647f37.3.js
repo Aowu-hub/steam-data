@@ -466,7 +466,7 @@ function startGame(opts){
   cheerMount(); calloutSetup(); /* 💬 24t-f */   /* 📣 cs-2b: the crowd for this game (Off = nothing) */
   if(window.GameComic) GameComic._reset(mode);   /* 💥 ck-2c (G.hold in loop() = a comic page is open) */
   BAR.level(opts.label || (MODES[mode].icon + ' ' + SN.LEVEL_NAMES[lvl] + (endless ? ' ♾️' : '')), lvl === 5 ? 'hc' : '');
-  BAR.meter('grow', '🎯', 0, 'Progress'); if(humans > 1) BAR.meter('grow1', '🎯', 0, 'Player 2 progress'); else BAR.hide('grow1');
+  raceMeter(humans);   /* 🎯 24zr: a meter for every rider */
   BAR.extra('mus-btn', {icon: musicOn() ? '🎵' : '🔇', label: musicOn() ? 'Music: on' : 'Music: off'});
   musicStart(theme);
   banner(mode === 'castle' ? (M.win ? '🏰 Grab ' + M.win + ' % of the map!' : '🏰 Most land in ' + fmtS(M.time) + '!') : mode === 'feast' ? (endless ? '♾️ Endless — eat as much as you can!' : '🍎 Grow to ' + M.target + '!') : mode === 'gate' ? (M.time ? '🧭 Be the longest in ' + fmtS(M.time) + '!' : '🧭 Last snake wins!') : '', 'good', 2200);
@@ -699,6 +699,25 @@ function musicStart(theme){
 }
 
 /* ================= HUD ================= */
+/* 🎯 24zr: 2–4 riders → ONE 🎯 race meter (a row per rider in the seat colour, leader glows, an out rider fades); 1 rider → the old 🎯 Progress meter */
+function raceMeter(n){
+  if(n < 2){ BAR.hide('race'); BAR.hide('grow1'); BAR.meter('grow', '🎯', 0, 'Progress'); G.race = null; return; }
+  BAR.hide('grow'); BAR.hide('grow1');
+  BAR.meter('race', '🎯', 0, 'Everyone\u2019s progress');
+  const slot = document.querySelector('#gbar [data-k="m:race"]'), mt = slot && slot.querySelector('.gb-mt'); if(!mt) return;
+  const hs = humanIdx();
+  slot.classList.add('sn-race'); slot.classList.remove('n2', 'n3', 'n4'); slot.classList.add('n' + Math.min(4, n));
+  mt.innerHTML = hs.map(i => '<s style="--c:' + (G.cols[i] || SEAT_COL[i % 4]) + '" title="' + String(G.seats[i] ? G.seats[i].name : 'Player ' + (i + 1)).replace(/[<>"&]/g, '') + '"><u></u></s>').join('');
+  G.race = {rows: [...mt.children], last: []};
+  if(BAR.fit) BAR.fit();
+}
+function raceSet(hs, ws){
+  const R = G.race; if(!R) return;
+  const top = Math.max(...ws), M = G.M;
+  hs.forEach((i, k) => { const row = R.rows[k]; if(!row) return; const w = Math.round(Math.max(0, Math.min(100, ws[k]))), lead = top > 0 && ws[k] === top && ws.filter(x => x === top).length === 1, out = M.snakes[i].alive === false;
+    const key = w + (lead ? 'L' : '') + (out ? 'O' : ''); if(R.last[k] === key) return; R.last[k] = key;   /* write the DOM only when it changes */
+    row.firstChild.style.width = w + '%'; row.classList.toggle('lead', lead); row.classList.toggle('out', out); });
+}
 function hud(){
   const M = G.M, me = M.snakes[0], hs = humanIdx();
   const len = SN.lenOf(M, me), tgt = M.mode === 'feast' && isFinite(M.target) ? M.target : (M.mode === 'gate' && M.goalLen ? M.goalLen : 0);
@@ -707,12 +726,12 @@ function hud(){
   else BAR.count('len', '🐍', len + (tgt ? '/' + tgt : ''), 'Snake length');
   const best = M.mode === 'gate' ? Math.max(1, ...M.snakes.map(s => s.len)) : 0;
   const bestLand = M.mode === 'castle' ? Math.max(1, ...M.snakes.map(s => s.land)) : 0;
-  hs.slice(0, 2).forEach((i, k) => { const s = M.snakes[i], L = SN.lenOf(M, s), w = M.story ? Math.min(100, (M.story.have || 0) / M.story.need * 100) : M.mode === 'castle' ? Math.min(100, s.land / (M.win || Math.max(bestLand, 30)) * 100) : tgt ? Math.min(100, L / tgt * 100) : M.mode === 'gate' ? Math.min(100, L / best * 100) : Math.min(100, (L % 50) * 2);
-    BAR.meter(k ? 'grow1' : 'grow', '🎯', w / 100, k ? 'Player 2 progress' : 'Progress'); });
+  const ws = hs.map(i => { const s = M.snakes[i], L = SN.lenOf(M, s); return M.story ? Math.min(100, (M.story.have || 0) / M.story.need * 100) : M.mode === 'castle' ? Math.min(100, s.land / (M.win || Math.max(bestLand, 30)) * 100) : tgt ? Math.min(100, L / tgt * 100) : M.mode === 'gate' ? Math.min(100, L / best * 100) : Math.min(100, (L % 50) * 2); });   /* 🎯 24zr: every rider, not just 2 */
+  if(hs.length > 1) raceSet(hs, ws); else { if(G.race){ BAR.hide('race'); G.race = null; } BAR.meter('grow', '🎯', ws[0] / 100, 'Progress'); }   /* 📱 own screens: each phone = ONE rider (me) */
   BAR.score(SN.score(M, 0).toLocaleString());
   const stT = M.story && M.story.time, timed = stT || ((M.mode === 'gate' || M.mode === 'castle') && M.time), tl = timed ? Math.max(0, (stT || M.time) - M.t) : M.t;
   BAR.time(fmtS(tl), !!timed && tl <= 10);
-  if(M.mode === 'castle' && !M.L.lives) BAR.hide('lives'); else BAR.lives(hs.map(i => Math.max(0, M.snakes[i].lives)).join(' · '), hs.length === 1 && M.snakes[hs[0]].lives === 1);   // 🎛️ p1c
+  if(M.mode === 'castle' && !M.L.lives) BAR.hide('lives'); else BAR.lives(hs.map(i => Math.max(0, M.snakes[i].lives)).join(hs.length > 2 ? '·' : ' · '), hs.length === 1 && M.snakes[hs[0]].lives === 1);   // 🎛️ p1c
   // skill button + quest cards
   hs.slice(0, 2).forEach((i, k) => {
     const s = M.snakes[i], q = $('quest' + k), btn = document.querySelector('.tb.skl[data-seat="' + k + '"]');
@@ -1142,7 +1161,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => { KEYHELD.delete(e.code); });
 window.addEventListener('blur', () => KEYHELD.clear());
 document.addEventListener('visibilitychange', () => { if(document.hidden && G && !G.over && !G.paused) togglePause(); });
-function togglePause(){ if(!G || G.over) return; G.paused = !G.paused; UI.pauseIcon($('pause-btn'), G.paused); banner(G.paused ? '⏸ Paused — P or ▶ to go on' : '▶ Go!', 'good', G.paused ? 600000 : 700); }
+function togglePause(){ if(!G || G.over) return; G.paused = !G.paused; UI.pauseIcon($('pause-btn'), G.paused, {go: '▶ Go!'}); }   // ⏸ sbp-p: tag in the bar, not on the map
 function pauseGame(){ if(G && !G.over && !G.paused) togglePause(); }
 function leavePlay(){ if(G && !G.over){ G.paused = true; UI.confirm({icon: '🐍', title: 'Leave this game?', body: 'The game ends and is not saved.', okText: 'Leave', cancelText: 'Stay'}).then(ok => { if(ok) backToMenu(); else if(G){ G.paused = false; UI.pauseIcon($('pause-btn'), false); } }); return; } backToMenu(); }
 function backToMenu(){ if(window.Cheer) Cheer.unmount(); /* 💬 24t-f off */ if(window.UI && UI.callout) UI.callout.setup(null); stopLoop(); musicStop(); hideResult(); G = null; KEYHELD.clear(); if(window.afterGameMenu && window.afterGameMenu()) return; renderMenu(); showScreen('menu'); }
@@ -1180,7 +1199,7 @@ function showEnd(){
   else if(solo && G.mode === 'castle'){ win = won; icon = won ? '🏰' : '🏰'; title = won ? (M.win ? 'You own ' + Math.floor(me.land) + ' % — castle complete!' : 'Biggest land: ' + Math.floor(me.land) + ' %!') : M.why === 'out' ? 'Trail cut — out!' : M.why === 'land' || M.why === 'time' ? snakeName(M.snakes[M.winner] || me) + ' got more land' : 'The map is full'; }
   else if(solo){ win = won; icon = won ? '🏆' : '🐍'; title = won ? (G.mode === 'gate' ? (M.why === 'last' ? 'Last snake riding!' : 'Longest snake!') : 'You reached ' + M.target + '!') : (G.mode === 'gate' ? (M.why === 'out' ? 'Out of lives' : snakeName(M.snakes[M.winner] || me) + ' was longer') : 'Bonk — game over'); }
   else if(M.winner >= 0){ win = true; icon = '🏆'; title = M.snakes[M.winner].name + ' wins!'; }
-  else { icon = '🤝'; title = 'Both out — a draw!'; }
+  else { icon = '🤝'; title = hs.length >= 3 ? "Everyone's out — a draw!" : 'Both out — a draw!'; }   /* ✨ 24zq: 3–4 riders all out */
   const tips = G.mode === 'castle' ? ['Small loops are safe loops — come home often!', 'Eat food to draw longer trails.', 'Watch out for snakes near your trail — hurry home!'] : G.mode === 'gate' ? ['Big snakes are slow to turn — cut in front of them!', 'Boost only when it\'s safe: it costs length.', 'Popped snakes leave big glowing food — grab it!'] : ['Plan your turn one square early.', 'Leave yourself a way out — don\'t curl into a corner.', 'Golden food = +3 — worth a detour.'];
   const rank = G.mode === 'gate' ? SN.gateRank(M).findIndex(s => s.i === 0) + 1 : 0, lvl = G.level;
   const sub = (solo && !won && !G.endless ? '💡 ' + pickOne(tips) : '') + (G.SZ && G.SZ.label && !G.story ? (solo && !won && !G.endless ? ' · ' : '') + '🗺️ ' + G.SZ.label + (mult > 1 ? ' · ×' + mult + ' points' : '') : '');
