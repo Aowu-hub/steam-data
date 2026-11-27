@@ -1,6 +1,8 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
+  "AvataRealm.69f7d74289.1.css": "2026-11-27T11:45:11.765Z",
+  "AvataRealm.69f7d74289.2.js": "2026-11-27T11:45:11.765Z",
   "Avateer.d09382db2f.1.css": "2026-11-27T11:37:55.449Z",
   "Avateer.d09382db2f.2.js": "2026-11-27T11:37:55.449Z",
   "Avateer.d09382db2f.3.js": "2026-11-27T11:37:55.449Z",
@@ -10,6 +12,9 @@
   "GeoScout.4a95e0bb75.2.js": "2026-11-27T11:03:41.166Z",
   "GeoScout.4a95e0bb75.3.js": "2026-11-27T11:03:41.166Z",
   "GeoScoutShapes.cf52b2344d.1.js": "2026-11-27T11:03:41.166Z",
-  "IsoProps.7a41d4f777.1.js": "2026-11-27T10:35:44.095Z"
+  "IsoProps.7a41d4f777.1.js": "2026-11-27T10:35:44.095Z",
+  "UiKit.6f2af9b2ec.1.css": "2026-11-27T11:45:11.765Z",
+  "UiKit.6f2af9b2ec.2.js": "2026-11-27T11:45:11.765Z",
+  "UiKitMusic.3df34b9687.1.js": "2026-11-27T11:45:11.765Z"
  }
 }
