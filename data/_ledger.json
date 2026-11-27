@@ -1,8 +1,15 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
+  "Avateer.5976ad0ef1.1.css": "2026-11-27T21:43:18.648Z",
+  "Avateer.5976ad0ef1.2.js": "2026-11-27T21:43:18.648Z",
+  "Avateer.5976ad0ef1.3.js": "2026-11-27T21:43:18.648Z",
+  "AvateerBattle.f7ee1db1dc.1.js": "2026-11-27T21:43:18.648Z",
+  "AvateerMake.6b15d2696d.1.js": "2026-11-27T21:43:18.648Z",
+  "AvateerStory_il1.3e97984640.1.js": "2026-11-27T21:43:18.648Z",
   "CardArt.837872033c.1.js": "2026-11-27T20:31:47.646Z",
   "CardArt.837872033c.2.js": "2026-11-27T20:31:47.646Z",
+  "CreatureKit.6e604243b7.1.js": "2026-11-27T21:43:18.648Z",
   "Gameroom.22d676496d.1.css": "2026-11-27T20:19:49.867Z",
   "Gameroom.22d676496d.2.js": "2026-11-27T20:19:49.867Z",
   "Gameroom.22d676496d.3.js": "2026-11-27T20:19:49.867Z",
