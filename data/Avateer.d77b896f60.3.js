@@ -1,0 +1,449 @@
+
+/* 🧳 Avateer — the game shell (av-s1a + av-s1b): screens · loop · HUD · input · talk · save. World + walkers + 🦘 gates = AvateerWorld · talk rows = AvateerStory_il1 · Pudding = CreatureElephant ·
+   🧑 creation = AvateerMake · 🃏 battles = AvateerBattle (av-s1b: Main 2 · 🐾 i3 tame · 🧭 r1 Tara's pet duel · map monsters · ⇄ two weapons · Lv + XP) ·
+   🔑 the village + Main 3 = AvateerVillage (av-s1c: 🔔 brain chest · 🌉 gap · 🥭 chest · 🏨 i1 · 🛒 i2 · 🪵 i4 · ⚒️ i5 · 🛁 s5 · 🛒 s10 · 📅 dailies) · 💾 3 files + 🎬 cover (GameFrame). */
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const SAVE_KEY = 'sp_avateer_s1:' + (CURRENT_PLAYER || 'guest'), AK = 0.62 * 1.55;   // avatar draw scale per zoom (the R0a2 sheet size)
+const calm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+/* 🌐 page words (StoryKit has its own) — ONE language at a time */
+const WORDS = {
+  en: {load: 'Packing for Elephant Jungle…', loadW: 'Building the islets…', loadT: 'Learning the island\'s stories…', jump: 'Jump', emote: 'Emote', swing: 'Swing',
+    nameH: 'Name your traveller', nameP: 'Up to 10 letters — Grandma Noi will call you this!', nameGo: '✅ Let\'s go!', nameBad: 'Try another name 🙂',
+    hop: '🦘 Hop over the puddles', hopStone: '🦘 Hop the stones', tapJump: 'Tap 🦘 to hop!', wave: '👋 Wave to Grandma Noi', talkNoi: '💬 Talk to Grandma Noi', inn: '🚶 Go to the inn',
+    mango: '🥭 Follow the sand bar to Mango Grove', saved: '💾 Your journey is saved!', soon: '⚔️ Battles come next — soon!', soonGap: '🌉 The bridge to the camps opens soon!',
+    slip: '💦 Whoops — slippery! Back to the start.', tooDeep: 'Too deep!', toot: 'pfrrt-TOOT!', zzz: 'zzz…', yay: 'Yay!', bag: 'Bag', w_wave: 'Wave', w_dance: 'Dance', w_breathe: 'Breathe', w_splash: 'Splash',
+    breathe: '🫁 In… and out.', back: 'Back', pond: 'Pudding\'s Bath',
+    goMango: '🥭 Go to Mango Grove — find Pudding', findPud: '🐘 Find Pudding in the grove', beat3: '⚔️ Beat the Mangobbles', mangoes: '🥭 Pick up the mangoes', noiPath: '💬 Grandma Noi is on the path',
+    swap2: '⇄ Swap weapons + beat 2 Mangobbles', toStream: '🚶 Follow Pudding to the stream', tame1: '🐾 Befriend a Mangobble (🍖 treat first!)', backNoi: '💬 Go back to Grandma Noi', duel: '🧭 Tara wants a pet duel!',
+    newW: '🗡️ New weapon! Tap ⇄ in a battle to swap.', lv: 'Lv', lvup: '⭐ Level up! Lv', treats: '🍖 Treats', petHome: '🏠 Your new friend lives in the pet house', moreMobs: '⚔️ More Mangobbles!',
+    trySwap: '⇄ Use the swap this time — Grandma is watching!', crow: 'Ko-ke-kokoo!', pinch: 'Pinch-pinch! Sorry!', fight: 'Fight'},
+  th: {load: 'กำลังเก็บกระเป๋าไปป่าช้าง…', loadW: 'กำลังสร้างเกาะ…', loadT: 'กำลังเรียนรู้เรื่องราวของเกาะ…', jump: 'กระโดด', emote: 'ท่าทาง', swing: 'ฟัน',
+    nameH: 'ตั้งชื่อนักเดินทาง', nameP: 'ไม่เกิน 10 ตัวอักษร — ยายน้อยจะเรียกเธอแบบนี้!', nameGo: '✅ ไปกันเลย!', nameBad: 'ลองชื่ออื่นนะ 🙂',
+    hop: '🦘 กระโดดข้ามแอ่งน้ำ', hopStone: '🦘 กระโดดข้ามก้อนหิน', tapJump: 'แตะ 🦘 เพื่อกระโดด!', wave: '👋 โบกมือให้ยายน้อย', talkNoi: '💬 คุยกับยายน้อย', inn: '🚶 ไปที่โรงเตี๊ยม',
+    mango: '🥭 เดินตามสันทรายไปสวนมะม่วง', saved: '💾 บันทึกการเดินทางแล้ว!', soon: '⚔️ การต่อสู้มาเร็ว ๆ นี้!', soonGap: '🌉 สะพานไปค่ายเปิดเร็ว ๆ นี้!',
+    slip: '💦 อุ๊ย ลื่น! กลับไปเริ่มใหม่นะ', tooDeep: 'ลึกไป!', toot: 'ปู๊ด-ตู๊ด!', zzz: 'คร่อก…', yay: 'เย้!', bag: 'กระเป๋า', w_wave: 'โบกมือ', w_dance: 'เต้น', w_breathe: 'หายใจ', w_splash: 'สาดน้ำ',
+    breathe: '🫁 หายใจเข้า… ออก', back: 'กลับ', pond: 'บ่ออาบน้ำพุดดิ้ง',
+    goMango: '🥭 ไปสวนมะม่วง — ตามหาพุดดิ้ง', findPud: '🐘 หาพุดดิ้งในสวน', beat3: '⚔️ ชนะแมงโกบเบิล', mangoes: '🥭 เก็บมะม่วง', noiPath: '💬 ยายน้อยอยู่ที่ทางเดิน',
+    swap2: '⇄ สลับอาวุธ ชนะแมงโกบเบิล 2 ตัว', toStream: '🚶 ตามพุดดิ้งไปลำธาร', tame1: '🐾 ผูกมิตรกับแมงโกบเบิล (ให้ขนมก่อน!)', backNoi: '💬 กลับไปหายายน้อย', duel: '🧭 ธาราอยากดวลสัตว์เลี้ยง!',
+    newW: '🗡️ อาวุธใหม่! แตะ ⇄ ตอนสู้เพื่อสลับ', lv: 'Lv', lvup: '⭐ เลเวลอัป! Lv', treats: '🍖 ขนม', petHome: '🏠 เพื่อนใหม่อยู่ที่บ้านสัตว์เลี้ยง', moreMobs: '⚔️ แมงโกบเบิลมาอีก!',
+    trySwap: '⇄ คราวนี้ลองสลับอาวุธนะ — ยายดูอยู่!', crow: 'เอ้กอี๊เอ้กเอ้ก!', pinch: 'หนีบ ๆ! ขอโทษ!', fight: 'สู้'}};
+const G = {lang: 'en', t: 0, ready: false, talking: false, save: null, W: null, V: null, H: null, P: null, J: null, ST: null, items: [], people: [], loop: null, lastTalk: {}, pending: null, act: null, pact: null,
+  hint: null, played: [], foot: null, footT: 0, tootT: 8 + Math.random() * 8, saveT: 0, playSec: 0, flags: {}, intro: false, near: {}, mobs: [], critters: [], battle: null, Q: null, drops: []};
+const w = k => (WORDS[G.lang] && WORDS[G.lang][k]) || WORDS.en[k] || k;
+function toast(s, ms){ const el = $('toast'); el.textContent = s; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), ms || 2200); }
+function sticker(x, y, text, col){ const el = document.createElement('div'); el.className = 'stk'; el.textContent = text; if(col) el.style.color = col; el.style.left = Math.round(x) + 'px'; el.style.top = Math.round(y) + 'px'; $('scr-play').appendChild(el); setTimeout(() => el.remove(), 1500); }
+function sound(k){ try { if(window.UISound) UISound.play(k); } catch(e){} }
+function tone(f, d, o){ try { if(window.UISound && UISound.tone) UISound.tone(f, d, o || {}); } catch(e){} }
+function tootSound(){ tone(196, 0.09, {type: 'sawtooth', gain: 0.08, slide: 330}); setTimeout(() => tone(330, 0.16, {type: 'triangle', gain: 0.1, slide: 262}), 90); }
+
+/* ---------- 💾 save — av-s1c: 3 files (GF.saves): device copy at once 'sp_save:avateer:<Name>:<slot>' = {meta, data, at} · the server file of the same slot at the inn + when you leave; a newer copy wins.
+   The S1a / S1b device key 'sp_avateer_s1:<Name>' moves into file 1 once (never lost). ---------- */
+const ME = CURRENT_PLAYER || 'guest', FK = slot => 'sp_save:' + GAME_ID + ':' + ME + ':' + slot, LAST_KEY = 'sp_avateer_slot:' + ME;
+function metaOf(s){ return {title: '🇹🇭 Elephant Jungle', chapter: G.lang === 'th' ? 'บทที่ 1' : 'Ch. 1', level: 'Lv ' + (s.lv || 1), name: s.name, playSec: s.playSec, quest: (G.ST && G.ST.tracked()) || '', av: G.heroBase || null}; }
+function migrate(){ try { if(!localStorage.getItem(FK(1))){ const o = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if(o && o.v === 1) localStorage.setItem(FK(1), JSON.stringify({meta: {title: '🇹🇭 Elephant Jungle', chapter: 'Ch. 1', level: 'Lv ' + (o.lv || 1), name: o.name, playSec: o.playSec || 0}, data: o, at: o.at || 1})); } } catch(e){} }
+function peekLang(){ for(let k = 1; k <= 3; k++){ try { const f = JSON.parse(localStorage.getItem(FK(k)) || 'null'); if(f && f.data && f.data.lang) return f.data.lang; } catch(e){} } return null; }
+function blank(){ return {v: 1, name: '', lang: (navigator.language || '').toLowerCase().indexOf('th') === 0 ? 'th' : 'en', pos: null, story: null, flags: {}, moves: ['jump'], at: 0, playSec: 0,
+  lv: 1, xp: 0, coins: 0, job: null, pet: null, help: 'guide', look: 'me', lk: {}, sets: null, set: 0, pets: [], treats: 0}; }   /* av-s1b: 🧑 creation + ⭐ level + 🐾 pets */
+function loadLocal(slot){ try { const f = JSON.parse(localStorage.getItem(FK(slot || G.slot || 1)) || 'null'), s = f && f.data; if(s && s.v === 1) return Object.assign(blank(), s); } catch(e){} return null; }
+function snapshot(){ const s = G.save; s.lang = G.lang; s.flags = G.flags; s.playSec = Math.round(G.playSec); if(G.H) s.pos = {x: +G.H.x.toFixed(2), y: +G.H.y.toFixed(2)}; if(G.ST) s.story = G.ST.toJSON(); s.at = Date.now(); return s; }
+function saveLocal(){ if(!G.save) return; try { const s = snapshot(); localStorage.setItem(FK(G.slot || 1), JSON.stringify({meta: metaOf(s), data: s, at: s.at})); localStorage.setItem(LAST_KEY, String(G.slot || 1)); } catch(e){} }
+function saveServer(why){ if(!G.save || !CURRENT_PLAYER || !window.google || !google.script || !google.script.run) return; const s = snapshot();
+  const file = {meta: Object.assign(metaOf(s), {why: why || ''}), data: s, at: s.at};
+  try { google.script.run.withSuccessHandler(() => {}).withFailureHandler(() => {}).saveGameFile(CURRENT_PLAYER, GAME_ID, G.slot || 1, JSON.stringify(file)); } catch(e){} }
+function pullServer(slot){ return new Promise(res => { if(!CURRENT_PLAYER || !window.google || !google.script || !google.script.run) return res(null); let done = false; const end = v => { if(!done){ done = true; res(v); } }; setTimeout(() => end(null), 6000);
+  try { google.script.run.withSuccessHandler(f => end(f && f.data && f.data.v === 1 ? f.data : null)).withFailureHandler(() => end(null)).loadGameFile(CURRENT_PLAYER, GAME_ID, slot || G.slot || 1); } catch(e){ end(null); } }); }
+
+/* ---------- 🏷️ name your traveller (≤ 10 letters, kid-safe; the login name to start) ---------- */
+const BAD = ['poop', 'butt', 'stupid', 'idiot', 'kill', 'dead', 'hate', 'sex', 'fuck', 'shit', 'damn', 'ควย', 'เหี้ย', 'สัส', 'มึง', 'โง่', 'ตาย', 'ฆ่า'];
+function cleanName(s){ s = String(s || '').replace(/[^\p{L}\p{M}\p{N} ]/gu, '').replace(/\s+/g, ' ').trim(); const a = Array.from(s); return a.slice(0, 10).join('').trim(); }
+function okName(s){ const l = s.toLowerCase(); return s.length > 0 && !BAD.some(b => l.indexOf(b) >= 0); }
+function askName(){ return new Promise(res => { const box = $('nm'), inp = $('nm-in'); $('nm-h').textContent = w('nameH'); $('nm-p').textContent = w('nameP'); $('nm-go').textContent = w('nameGo'); $('nm-bad').textContent = '';
+  inp.value = cleanName(G.save.name || CURRENT_PLAYER || ''); box.classList.remove('hidden');
+  const c = $('nm-av'), g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); try { drawAvatar(g, {av: G.heroBase, name: inp.value || 'You', dir: 1}, 96, 206, 2.3, {t: 1, still: true, pose: {face: 'happy'}}); } catch(e){}
+  const go = () => { const n = cleanName(inp.value); if(!okName(n)){ $('nm-bad').textContent = w('nameBad'); sound('nope'); return; } box.classList.add('hidden'); sound('tap'); res(n); };
+  $('nm-go').onclick = go; inp.onkeydown = e => { if(e.key === 'Enter') go(); }; setTimeout(() => { try { inp.focus(); inp.select(); } catch(e){} }, 60); }); }
+
+/* ---------- 🌐 language ---------- */
+function setLang(l){ G.lang = l === 'th' ? 'th' : 'en'; Story.lang(G.lang); document.body.classList.toggle('th', G.lang === 'th'); document.documentElement.lang = G.lang;
+  $('b-lang').innerHTML = G.lang === 'th' ? '<b>ไทย</b><span>EN</span>' : '<span>ไทย</span><b>EN</b>'; const bl = $('back-btn').querySelector('.bl'); if(bl) bl.textContent = w('back');
+  if(G.padReady) dressPads(); drawTracker(); updateGoal(true); }   /* the pad dress resets the petal ring → lay it out again */
+
+/* ---------- 🧑 the hero, 🐘 Pudding, the villagers ---------- */
+function baseAv(){ let av = null; try { const s = JSON.parse(localStorage.getItem('sp_av:' + CURRENT_PLAYER) || 'null'); if(s) av = s; } catch(e){} return av || defaultAvatar(CURRENT_PLAYER || 'Traveller'); }
+function who(){ return {av: G.heroAv, name: G.save.name || 'You', dir: G.H.dir}; }
+function drawHero(g, sx, sy, k){ const H = G.H, J = G.J, sc = k * AK, air = J && J.on ? J.air : (H.hop >= 0 ? Math.sin(Math.min(1, H.hop / 0.5) * Math.PI) : 0);
+  if(air > 0.02){ g.fillStyle = 'rgba(30,40,20,.18)'; g.beginPath(); g.ellipse(sx, sy, 16 * k * (1 - air * 0.4), 6 * k * (1 - air * 0.4), 0, 0, 7); g.fill(); }
+  const lift = air * 34 * k;
+  if(G.act && !G.act.run.done){ Acting.draw(g, who(), sx, sy - lift, sc, G.act.run.at(G.t), {t: G.t}); if(G.act.key === 'avateer.breathe') balloon(g, sx + H.dir * 15 * k, sy - 50 * k, k, (G.t - G.act.t0) * 1000); return; }
+  if(G.act && G.act.run.done) G.act = null;
+  const crouch = J && J.on ? J.crouch : 0, land = J && J.on ? J.land : 0;
+  let pose = null; if(air > 0.02) pose = {face: 'joy', armL: 2.2, armR: 2.4, kneeL: 0.9, kneeR: 0.5, legL: -0.4, legR: 0.3}; else if(crouch > 0.05 || land > 0.05){ const c = Math.max(crouch, land * 0.8); pose = {face: 'focused', kneeL: c * 0.9, kneeR: c * 0.9, bend: c * 0.18, armL: -0.4 * c, armR: -0.4 * c, dy: c * 3}; }
+  drawAvatar(g, {av: G.heroAv, name: G.save.name, dir: H.dir, walkT: H.moving && !(J && J.on) ? H.walkT : 0}, sx, sy - lift, sc, pose ? {t: G.t, still: true, pose} : {t: G.t}); }
+function balloon(g, x, y, k, ms){ const r = ms < 80 ? 0 : ms < 1280 ? 4 + 14 * (ms - 80) / 1200 : ms < 1680 ? 18 : ms < 2880 ? 18 - 15 * (ms - 1680) / 1200 : 0; if(r < 1) return;
+  g.save(); g.fillStyle = '#FFB7C9'; g.strokeStyle = '#2A1C14'; g.lineWidth = 2 * k; g.beginPath(); g.arc(x, y, r * k, 0, 7); g.fill(); g.stroke(); g.fillStyle = 'rgba(255,255,255,.7)'; g.beginPath(); g.ellipse(x - r * k * 0.35, y - r * k * 0.35, r * k * 0.22, r * k * 0.14, -0.6, 0, 7); g.fill(); g.restore(); }
+function pudView(P){ const away = P.view === 'NW'; return P.dir > 0 ? (away ? 'NE' : 'SE') : (away ? 'NW' : 'SW'); }
+function drawPudding(g, sx, sy, k){ const P = G.P, o = {view: pudView(P), t: G.t};
+  if(G.pact){ const ms = (G.t - G.pact.t0) * 1000, tot = Creatures.ELEPHANT.total(G.pact.k); if(ms > tot && !G.pact.hold) G.pact = null; else { o.eact = G.pact.k; o.ems = ms; if(!G.pact.fired && ms >= Creatures.ELEPHANT.contactAt(G.pact.k)){ G.pact.fired = true; if(G.pact.on) G.pact.on(); } } }
+  if(!o.eact && P.moving) o.walk = P.walkT;
+  Creatures.draw(g, 'pudding', sx, sy, 62 * k * AK, o); }
+function pAct(k, o){ o = o || {}; if(G.pact && G.pact.k === k && !o.again) return; G.pact = {k, t0: G.t, fired: false, hold: !!o.hold, on: o.on || null}; }
+function pudSays(text){ const p = G.V.toScreen(G.P.it.x, G.P.it.y, G.P.it.z); sticker(p.x, p.y - 70 * G.V.zoom * AK, text); }
+function heroAct(key, o){ o = o || {}; if(!Acting.get('act', key) && !(Acting.T && Acting.T.acts[key])) return false; const run = Acting.play(who(), key, {t0: G.t, onContact: o.onContact}); G.act = {key, run, t0: G.t}; G.played.push(key); if(G.played.length > 20) G.played.shift(); return true; }
+function personItem(id, at){ const p = Story.person(id) || {}, av = Object.assign({}, defaultAvatar(p.av || p.name || id), p.look || {}); const full = Story.rid(id);
+  const top = Story.headTop('av1:' + full, (q, x, y) => drawAvatar(q, {av, name: p.av || id, dir: -1}, x, y, 1, {t: 0, still: true}), 120);   /* 📏 the mark follows the real head (av-r0e4b) */
+  const it = {x: at.x, y: at.y, z: G.W.M.heightAt(Math.floor(at.x), Math.floor(at.y)), pid: full, id, dir: -1, face: 'happy',
+    draw(g, sx, sy, k){ const sc = k * AK; drawAvatar(g, {av, name: p.av || id, dir: it.dir}, sx, sy, sc, {t: G.t, still: true, pose: {face: it.face}}); const m = G.ST.markerFor(full); if(m) Story.markerOver(g, sx, sy, top * sc, Story.sizes(80 * sc).marker, m, G.t); }};
+  return it; }
+
+/* ---------- 🗺️ boot: kits → islets → story → save → name → play ---------- */
+async function boot(){ const lb = (p, txt) => { $('load-bar').style.width = Math.round(p * 100) + '%'; if(txt) $('load-text').textContent = txt; };
+  migrate(); G.lang = peekLang() || blank().lang; Story.lang(G.lang); document.body.classList.toggle('th', G.lang === 'th'); lb(0.05, w('load'));
+  const I = AvWorld.ISL.il1; await Props.need(I.needs || []); lb(0.25, w('loadT'));
+  await AvWorld.need('story_il1'); lb(0.4, w('loadW'));
+  G.W = AvWorld.build('il1', {moves: ['jump']}); lb(0.55);   /* av-s1c: the world first (the same for every file) → 🎬 cover → the file */
+  G.V = Iso.view($('iso'), G.W.M, {bg: 'none', shadow: true, min: 0.45, max: 2.6, pad: {t: 70, b: 40}}); G.V.resize();
+  { const tall = G.V.H > G.V.W * 1.2, d = G.V.dpr || 1; G.V.zoom = Iso.stepFor((tall ? 1 : G.V.W > 1000 ? 1.5 : 1) * d) / d; }   /* the baked zoom step (the cover shot + the game use it) */
+  { const pics0 = G.W.items.map(p => p.pic).filter(Boolean); await Iso.warm(pics0, G.V, {onProgress: f => lb(0.55 + f * 0.4)}); }
+  $('loading').style.opacity = 0; setTimeout(() => $('loading').classList.add('hidden'), 350);   /* the cover comes next */
+  G.slot = await pickFile(); try { localStorage.setItem(LAST_KEY, String(G.slot)); } catch(e){}
+  G.save = loadLocal(G.slot) || blank(); if(!G.save.lang) G.save.lang = G.lang; G.lang = G.save.lang; Story.lang(G.lang); document.body.classList.toggle('th', G.lang === 'th');
+  const srv = await pullServer(G.slot); if(srv && Number(srv.at || 0) > Number(G.save.at || 0)) G.save = Object.assign(blank(), srv);
+  G.flags = Object.assign({}, G.save.flags || {}); G.playSec = G.save.playSec || 0;
+  G.ST = Story.state(G.save.story || {}, {lv: 1, ch: 1}); G.ST.onStep = onStep;
+  G.heroBase = baseAv(); G.heroAv = G.heroBase;
+  const st = G.save.pos && G.W.M.walk(Math.floor(G.save.pos.x), Math.floor(G.save.pos.y)) ? G.save.pos : G.W.spot('start');
+  G.H = AvWorld.walker(G.W, {x: st.x, y: st.y, dir: -1}); G.H.hop = -1; G.H.it = {x: G.H.x, y: G.H.y, z: G.H.z, draw: drawHero};
+  const pAt = G.ST.status('il1.m1') === 'open' ? G.W.spot('pudding') : G.W.freeNear(st.x - 0.7, st.y + 0.5, 2);
+  G.P = AvWorld.follower(G.W, G.H, {x: pAt.x, y: pAt.y, gap: 0.85, on: G.ST.status('il1.m1') !== 'open'}); G.P.it = {x: G.P.x, y: G.P.y, z: G.P.z, draw: drawPudding};
+  G.J = AvWorld.hopper(G.W, G.H, {onLand, onDone: () => { G.P.wait = null; updateGoal(); }, onSlip});
+  G.people = Object.keys(I.people || {}).map(k => personItem(I.people[k], G.W.spot(k)));
+  G.items = G.W.items.concat(G.people, [G.P.it, G.H.it]);
+  lb(0.7);
+  const tall = G.V.H > G.V.W * 1.2, d = G.V.dpr || 1; G.V.zoom = Iso.stepFor((tall ? 1 : G.V.W > 1000 ? 1.5 : 1) * d) / d; G.V.follow(G.H.it); G.V.centerOn(G.H.x, G.H.y);
+  controls(); lwStart(); setLang(G.lang);
+  G.ready = true; G.loop = Iso.loop({update: step, render, idle: () => !!G.battle});
+  if(!G.save.name){ const n = await askName(); G.save.name = n; saveLocal(); }
+  Story.vars({name: G.save.name});
+  if(!G.save.job) await create();   /* 🧑 av-s1b: weapon · pet · help (an S1a save gets it once, the quest stays where it was) */
+  if(G.flags['il1.m1'] && !G.save.xpInit){ G.save.xpInit = 1; G.save.xp += 30; G.save.coins += 20; }   /* Main 1's reward, now that ⭐ XP exists */
+  setupS1b(); VIL = AvVillage.install(villageApi()); VIL.boot();
+  if(G.ST.status('il1.m1') === 'open') intro(); else { drawTracker(); updateGoal(); }
+}
+/* ---------- 🎬 av-s1c: the cover (GF.cover) — the Landing islet as the art (baked from the real map), ▶ Play = your last file · ⏩ Continue · 📂 3 files ---------- */
+function coverShot(){ try { const c = $('iso'); G.V.follow(null); G.V.centerOn(15.5, 41.5);
+    Iso.frame(G.V, {items: G.W.items, t: 0}); const s = document.createElement('canvas'); s.width = c.width; s.height = c.height; s.getContext('2d').drawImage(c, 0, 0); c.getContext('2d').clearRect(0, 0, c.width, c.height); return s; } catch(e){ return null; } }
+function coverArt(shot){ const sky = (g, W, H) => { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#7CCBFF'); gr.addColorStop(0.62, '#D6F0FF'); gr.addColorStop(1, '#FFE8C2'); g.fillStyle = gr; g.fillRect(0, 0, W, H); };
+  const fit = (W, H) => { if(!shot) return null; const k = Math.max(Math.min(W / shot.width, H / shot.height) * 1.3, Math.max(W / shot.width, H / shot.height) * 0.92); return {k, x: (W - shot.width * k) / 2, y: (H - shot.height * k) / 2 + H * 0.06}; };
+  window.AV_COVER = {still(g, W, H){ sky(g, W, H); g.save(); g.globalAlpha = 0.8; g.fillStyle = '#fff'; [[0.1, 0.18, 46], [0.86, 0.14, 58], [0.62, 0.3, 34]].forEach(([x, y, r]) => { r *= Math.max(0.6, W / 1300); [[0, 0, 1], [-0.9, 0.25, 0.7], [0.9, 0.25, 0.75]].forEach(q => { g.beginPath(); g.arc(W * x + q[0] * r, H * y + q[1] * r, r * q[2], 0, 7); g.fill(); }); }); g.restore();
+      const f = fit(W, H); if(f) g.drawImage(shot, f.x, f.y, shot.width * f.k, shot.height * f.k); },
+    live(g, W, H, t){ const s = Math.max(0.6, Math.min(W, H) / 700), x = W * 0.2, y = H * 0.9, ms = (t * 1000) % 5200; const o = {view: 'SE', t}; if(ms < Creatures.ELEPHANT.total('toot')){ o.eact = 'toot'; o.ems = ms; }
+      try { Creatures.draw(g, 'pudding', x, y, 120 * s, o); } catch(e){} if(ms > 300 && ms < 1500){ const k = (ms - 300) / 1200; g.save(); g.globalAlpha = 1 - k; g.fillStyle = '#9B5DE5'; g.font = '800 ' + Math.round(30 * s) + 'px Fredoka, sans-serif'; g.fillText('♪', x + 50 * s + k * 60 * s, y - 120 * s - k * 40 * s); g.restore(); } },
+    spots(W, H){ const k = Math.max(0.4, Math.min(0.8, H / 1000)); return [{x: W * 0.5, y: H * 0.86, k}, {x: W * 0.62, y: H * 0.9, k: k * 0.95, from: 1, dir: -1}, {x: W * 0.74, y: H * 0.88, k: k * 0.9, from: 1, dir: -1}]; }}; }
+function pickFile(){ return new Promise(res => { const last = +(localStorage.getItem(LAST_KEY) || 1) || 1, q = new URLSearchParams(location.search);
+    if(q.get('cover') === '0' || window.AV_NOCOVER || !window.GF){ res(+(q.get('slot') || last) || 1); return; }
+    coverArt(coverShot()); const files = GF.saves({game: GAME_ID, me: ME, slots: 3}); let cover = null, done = false; const go = slot => { if(done) return; done = true; const el = $('av-files'); if(el) el.remove(); cover.hide(); res(slot); };
+    const lastFile = list => { const f = list.find(x => x.slot === last && !x.empty) || list.filter(x => !x.empty).sort((a, b) => b.at - a.at)[0]; return f ? f.slot : (list.find(x => x.empty) || {slot: 1}).slot; };
+    const openFiles = () => { let el = $('av-files'); if(el) el.remove(); el = document.createElement('div'); el.id = 'av-files'; el.innerHTML = '<div class="avf-card"><div class="avf-hd"><b>📂 ' + (G.lang === 'th' ? 'ไฟล์การเดินทาง' : 'Your travel files') + '</b><button class="sp-btn sp-secondary" id="avf-x" data-sound="tap">✕</button></div><div id="avf-box"></div></div>';
+      document.body.appendChild(el); $('avf-x').onclick = () => el.remove(); files.screen($('avf-box'), {onPick: slot => go(slot), onNew: slot => go(slot)}); };
+    cover = GF.cover(document.body, {game: GAME_ID, title: 'Avateer', icon: '🧳', version: '1.0', me: ME, players: [], avatarOf: () => baseAv(), story: G.lang === 'th' ? 'เดินทางเกาะลอยฟ้ากับพุดดิ้ง ลูกช้างตัวน้อย' : 'Travel the floating islands with Pudding the baby elephant',
+      c1: '#FFB21A', c2: '#2E9E6A', seats: {min: 1, max: 1}, btns: 'centre', acts: ['beat.wave', 'beat.cheer'], onPlay: () => files.list().then(list => go(lastFile(list))).catch(() => go(last))});
+    G.cover = cover; G.files = files; cover.show();
+    files.list().then(list => { if(done) return; const any = list.some(f => !f.empty); cover.saves(any ? {has: true, onContinue: () => go(lastFile(list)), onLoad: openFiles} : null); }).catch(() => {}); }); }
+
+/* 🛶 the boat lands → Noi + Pudding peeking → Main 1 starts */
+function intro(){ G.intro = true; const b = G.W.spot('boat'); G.V.follow(null); G.V.centerOn(b.x, b.y); pAct('peek', {hold: false});
+  setTimeout(() => { G.V.follow(G.H.it); tone(523, 0.12, {type: 'sine', gain: 0.08}); setTimeout(() => talkTo('noi', true), 700); }, calm ? 200 : 1300); }
+
+/* ---------- 💬 talk ---------- */
+function talkTo(id, force){ if(G.talking) return Promise.resolve(null); const full = Story.rid(id), p = G.people.find(x => x.pid === full);
+  G.talking = true; document.body.classList.add('talking'); G.H.stop(); G.H.lock = true; closeEmotes(); if(p) p.dir = G.H.x < p.x ? -1 : 1;
+  return Story.meet($('scr-play'), full, G.ST, {me: G.save.name, meAv: G.heroAv, basic: false, onLine}).then(r => { G.talking = false; G.H.lock = false; document.body.classList.remove('talking'); G.lastTalk[full] = G.t;
+    if(p) p.face = 'happy'; if(r && r.go === 'none' && VIL && VIL.place(id)) return r; afterTalk(full, r || {}); drawTracker(); updateGoal(); saveLocal(); return r; }); }
+function onLine(n){ const p = G.people.find(x => x.pid === n.who); if(p && n.face) p.face = n.face;
+  if(n.who === 'avateer.pudding' && n.act){ if(/toot/.test(n.act)) pAct('toot', {again: true, on: tootSound}); else if(/peek/.test(n.act)) pAct('peek', {again: true}); else if(/hug|trunk round/.test(n.act)) pAct('hug', {again: true}); else if(/doz|sleep|zzz/i.test(n.act)) pAct('sleep', {hold: true}); }
+  if(n.who === 'avateer.pudding' && !n.act && n.face) { const f = Creatures.ELEPHANT.FACE[n.face]; if(f) pAct(f[0], {again: true}); } }
+function afterTalk(full, r){ const q = r.quest;
+  if(q === 'il1.m1' && r.mode === 'start' && r.go === 'accept'){ G.P.on = true; G.P.x = G.W.spot('pudding').x; G.pact = null; setTimeout(() => { if(G.ST.trackerInfo() && G.ST.status('il1.m1') === 'active') talkTo('noi'); }, 500); }
+  if(r.go && String(r.go).indexOf('gest:') === 0){ const k = r.go.slice(5); setTimeout(() => doEmote(k, true), 250); }
+  afterTalkS1b(full, r); if(VIL) VIL.afterTalk(full, r);
+}
+function onStep(r){ if(r.id !== 'il1.m1') return onStepS1b(r); const a = G.ST.data.q['il1.m1'], k = a ? a[0] : 5;
+  if(r.stepDone && r.step === 1){ setTimeout(() => talkLine('t.il1.m1.step2'), 650); }
+  if(r.ready){ setTimeout(innEnd, 300); }
+  drawTracker(); updateGoal(); saveLocal(); }
+function talkLine(id){ if(G.talking) return; G.talking = true; document.body.classList.add('talking'); G.H.stop();
+  Story.talk($('scr-play'), id, {state: G.ST, who: 'avateer.noi', me: G.save.name, meAv: G.heroAv, onLine}).then(() => { G.people.forEach(p => p.face = 'happy'); G.talking = false; document.body.classList.remove('talking'); drawTracker(); updateGoal(); }); }
+/* 🛏️ step ⑤ at the inn: Tum's welcome = 💾 the first save · the ⭐-clip photo · Pudding falls asleep → QUEST DONE */
+function innEnd(){ if(G.talking) return setTimeout(innEnd, 400); G.talking = true; document.body.classList.add('talking'); G.H.stop();
+  Story.talk($('scr-play'), 't.il1.m1.end', {state: G.ST, who: 'avateer.noi', me: G.save.name, meAv: G.heroAv, label: '📖 ' + Story.qtitle(Story.get('il1.m1')), quest: 'il1.m1', onLine: n => { onLine(n); if(n.who === 'avateer.tum' && /save/.test(n.act || '')){ G.flags['seen.save'] = 1; saveLocal(); saveServer('inn'); toast(w('saved')); sound('win'); } if(/photo/.test(n.act || '')) G.flags['seen.taraPhoto'] = 1; }})
+    .then(() => { const res = G.ST.turnIn('il1.m1'); G.flags['il1.m1'] = 1; G.flags['map.half'] = 1; G.flags['emote.breathe'] = 1; saveLocal(); saveServer('m1');
+      return res ? Story.done($('scr-play'), 'il1.m1', {reward: res.reward}) : null; })
+    .then(() => { G.talking = false; document.body.classList.remove('talking'); pAct('sleep', {hold: true}); G.P.hold = true; setTimeout(() => { G.P.hold = false; G.pact = null; pAct('cheer'); }, 3500); drawTracker(); updateGoal(); }); }
+
+/* ---------- 🦘 hops ---------- */
+function onLand(k, it, J){ sound('pop'); const def = Props.DEFS[it.prop] || {}, target = it.prop === 'gate_jump_puddles' ? 'puddle' : it.prop === 'gate_jump_stones' ? 'stone' : it.prop === 'gate_jump_gap' ? 'gap' : 'stone';
+  const over = k === (J.dir > 0 ? J.hops.length - 1 : 0), res = target === 'gap' && !over ? [] : G.ST.event({do: 'move', move: 'jump', target}); if(Math.hypot(G.P.x - G.H.x, G.P.y - G.H.y) < 4) pAct('cheer', {again: true, on: () => tone(660, 0.06, {type: 'triangle', gain: 0.06})});
+  if(!res.length){ updateGoal(); } }
+function onSlip(it){ sound('nope'); const p = G.V.toScreen(G.H.it.x, G.H.it.y, G.H.it.z); sticker(p.x, p.y - 60 * G.V.zoom, '💦'); toast(w('slip')); pAct('toot', {again: true, on: tootSound}); }
+function jumpPress(){ if(G.talking) return; const J = G.J; if(J.on){ if(J.busy){ G.pending = 'hop'; return; } J.press(); return; }   /* a press while a hop is still landing is kept for the next hop (kids press early) */
+  const g = AvWorld.gateNear(G.W, G.H, 1.25); if(g){ J.start(g); G.pending = 'hop'; if(G.P && Math.hypot(G.P.x - G.H.x, G.P.y - G.H.y) < 5){ const s = g.hops[g.n]; G.P.wait = G.W.freeNear(s.x - (g.dir > 0 ? 0.6 : -0.6), s.y + 0.5, 1.5); } return; }
+  const grey = G.W.gates.find(it => it.state === 'grey' && Props.hops(it).length && Math.hypot(Props.hops(it)[0].x - G.H.x, Props.hops(it)[0].y - G.H.y) < 1.6); if(grey){ toast(w('soonGap')); return; }
+  if(G.H.hop < 0){ G.H.hop = 0; sound('pop'); } }
+
+/* ---------- 🎭 emotes ---------- */
+const EMOTE_ACT = {wave: 'beat.wave', dance: 'dance', breathe: 'avateer.breathe', splash: 'avateer.splash'};
+function emoteList(){ const L = ['wave', 'dance']; if(G.flags['emote.breathe'] || stepIs(3)) L.push('breathe'); if(nearPond()) L.push('splash'); return L; }
+function openEmotes(){ const box = $('emotes'); if(!box.classList.contains('hidden')) return closeEmotes(); box.innerHTML = '';
+  const IC = {wave: '👋', dance: '💃', breathe: '🫁', splash: '💦'}; emoteList().forEach(k => { const b = document.createElement('button'); b.className = 'candy'; b.setAttribute('data-sound', 'tap'); b.dataset.k = k; b.innerHTML = IC[k] + '<small>' + w('w_' + k) + '</small>'; b.onclick = e => { e.stopPropagation(); closeEmotes(); doEmote(k); }; box.appendChild(b); });
+  box.classList.remove('hidden'); const r = $('b-emote').getBoundingClientRect(), bw = box.getBoundingClientRect(); box.style.left = Math.max(8, Math.min(innerWidth - bw.width - 8, r.left + r.width / 2 - bw.width / 2)) + 'px'; box.style.top = Math.max(60, r.top - bw.height - 10) + 'px'; }
+function closeEmotes(){ $('emotes').classList.add('hidden'); }
+function doEmote(k, fromTalk){ if(!heroAct(EMOTE_ACT[k])) return; G.H.stop(); sound('tap');
+  const noi = G.people.find(p => p.id === 'noi'), d = noi ? Math.hypot(noi.x - G.H.x, noi.y - G.H.y) : 99;
+  if(k === 'wave' && d < 4.5){ if(noi) noi.dir = G.H.x < noi.x ? -1 : 1; G.ST.event({do: 'gesture', what: 'wave', who: 'noi'}); }
+  if(k === 'breathe'){ G.flags['emote.breathe'] = 1; toast(w('breathe'), 2600); if(Math.hypot(G.P.x - G.H.x, G.P.y - G.H.y) < 4) setTimeout(() => pAct('breathe', {again: true}), 300); }
+  if(k === 'splash'){ G.flags['seen.splash'] = 1; pAct('splash', {again: true}); }
+  if(k === 'dance' && Math.hypot(G.P.x - G.H.x, G.P.y - G.H.y) < 4) pAct('cheer', {again: true});
+  G.ST.event({do: 'gesture', what: k}); drawTracker(); updateGoal(); }
+const nearPond = () => { const s = G.W.spot('pond'); return s && Math.hypot(s.x - G.H.x, s.y - G.H.y) < 3; };
+
+/* ---------- 📖 tracker · goal pill · the 🌱 Basic guide ---------- */
+function stepIs(k){ const a = G.ST && G.ST.data.q['il1.m1']; return !!a && a[0] === k; }
+function drawTracker(){ if(!G.ST) return; const host = $('trk'); Story.tracker(host, G.ST, {slim: innerHeight < 460}); placeGoal(); }
+function goalNow(){ if(!G.ST) return null; const m1 = G.ST.status('il1.m1'); if(m1 === 'open' || m1 === 'hidden') return null;
+  if(m1 === 'done'){ if(G.ST.status('il1.m2') === 'done' && VIL){ const v = VIL.goal(); if(v !== undefined) return v; } const g2 = goalS1b(); if(g2 !== undefined) return g2;
+    if(VIL){ const s = VIL.suggest(); if(s !== undefined) return s; } const z = G.W.zoneAt(G.H.x, G.H.y); return z === 'landing' && !G.flags['seen.mango'] ? {text: w('mango'), target: G.W.spot('mango')} : null; }
+  const a = G.ST.data.q['il1.m1']; if(!a) return null; const s = a[0], noi = G.W.spot('noi');
+  if(s === 0) return {text: w('talkNoi'), target: noi};
+  if(s === 1){ const g = G.W.gate('g.puddles'); return {text: w('hop'), n: a[1], of: 3, target: Props.hops(g)[0], gate: g}; }
+  if(s === 2) return {text: w('wave'), target: noi, emote: true};
+  if(s === 3) return {text: w('talkNoi'), target: noi};
+  if(s === 4) return {text: w('inn'), target: G.W.spot('inn')};
+  return null; }
+function updateGoal(force){ const el = $('goal'), q = goalNow(); G.hint = q; if(!q){ el.classList.add('hidden'); return; }
+  const html = q.text + (q.of ? '<i>' + q.n + ' / ' + q.of + '</i>' : ''); if(force || el.innerHTML !== html) el.innerHTML = html; el.classList.remove('hidden'); placeGoal(); }
+function placeGoal(){ const el = $('goal'), t = $('top').getBoundingClientRect(), tr = $('trk').getBoundingClientRect(), nav = $('back-btn-nav'), nb = nav ? nav.getBoundingClientRect().bottom : 0; el.style.top = Math.round(Math.max(t.bottom, tr.bottom, nb) + 8) + 'px'; }
+function guide(){ const q = G.hint, hand = $('hand'); let show = false;
+  if(q && q.gate && !G.talking){ const J = G.J, near = J.on || AvWorld.gateNear(G.W, G.H, 1.25); if(near && !(J.on && J.busy)){ const r = $('b-jump').getBoundingClientRect(); hand.style.left = (r.left - 30) + 'px'; hand.style.top = (r.top + r.height * 0.35) + 'px'; hand.style.transform = 'rotate(70deg)'; show = true; } }
+  if(q && q.emote && !G.talking && $('emotes').classList.contains('hidden')){ const noi = G.W.spot('noi'); if(Math.hypot(noi.x - G.H.x, noi.y - G.H.y) < 4.5){ const r = $('b-emote').getBoundingClientRect(); hand.style.left = (r.left - 30) + 'px'; hand.style.top = (r.top + r.height * 0.3) + 'px'; hand.style.transform = 'rotate(70deg)'; show = true; } }
+  if(q && q.emote && !$('emotes').classList.contains('hidden')){ const b = $('emotes').querySelector('[data-k="wave"]'); if(b){ const r = b.getBoundingClientRect(); hand.style.left = (r.left + r.width * 0.45) + 'px'; hand.style.top = (r.bottom - 6) + 'px'; hand.style.transform = 'rotate(0deg)'; show = true; } }
+  hand.classList.toggle('hidden', !show); $('b-jump').classList.toggle('pz-glow', !!(q && q.gate) && show); }
+/* 👣 footsteps to the goal (recomputed twice a second, never every frame) */
+function footsteps(){ const q = G.hint; if(!q || !q.target || G.talking){ G.foot = null; return; } const d = Math.hypot(q.target.x - G.H.x, q.target.y - G.H.y); if(d < 2.2 || G.J.on){ G.foot = null; return; }
+  const p = Iso.path(G.W.M, {x: G.H.x, y: G.H.y}, G.W.freeNear(q.target.x, q.target.y, 2)); G.foot = p && p.length > 2 ? p.slice(1, 14) : null; }
+
+/* ---------- 🃏 av-s1b: 🧑 creation · ⚔️ weapons on the hero · ⭐ Lv + XP · 🐾 pet follows · 👾 map monsters · Main 2 · 🐾 i3 · 🧭 r1 ---------- */
+const JOB = () => AvBattle.JOBS[G.save.job] || AvBattle.JOBS.knight;
+function lookAv(){ const av = Object.assign({}, G.heroBase); if(G.save && G.save.look === 'new') Object.keys(G.save.lk || {}).forEach(k => { const R = AvMake.LOOKS[k]; if(R) av[R.key] = G.save.lk[k]; }); return av; }
+function curSets(){ const J = JOB(); return G.flags['swap.got'] ? [[J.w, J.off], [J.w2]] : [[J.w, J.off]]; }
+function armHero(){ G.heroAv = G.heroDressed || G.heroBase; if(!G.save || !G.save.job || !window.AvWeapons) return; const sets = curSets(), set = sets[G.save.set || 0] || sets[0];
+  try { G.heroAv = AvWeapons.arm(G.heroAv, AvWeapons.design(AvWeapons.idx(set[0], 0)), set[1] ? AvWeapons.design(AvWeapons.idx(set[1], 0)) : null); } catch(e){} }
+async function create(){ document.body.classList.add('battling'); const r = await AvMake.open($('scr-play'), {lang: G.lang, name: G.save.name, av: G.heroBase, pick: G.save.job ? {job: G.save.job, pet: G.save.pet, help: G.save.help, look: G.save.look, lk: G.save.lk} : null});
+  document.body.classList.remove('battling'); Object.assign(G.save, {job: r.job, pet: r.pet, help: r.help, look: r.look, lk: r.lk}); if(G.redress) G.redress(); if(G.padReady) dressPads(); saveLocal(); saveServer('make'); sound('win'); }
+/* ⭐ XP to the next level (plan §17i: 30 + 12·L + 2·L²) */
+const xpNeed = L => 30 + 12 * L + 2 * L * L;
+function gainXp(n, coins){ const s = G.save; s.xp += n || 0; s.coins += coins || 0; let up = false; while(s.xp >= xpNeed(s.lv)){ s.xp -= xpNeed(s.lv); s.lv++; up = true; } if(up){ setTimeout(() => toast(w('lvup') + ' ' + s.lv + '!', 2600), 300); sound('win'); pAct('cheer', {again: true}); } drawLv(); return up; }
+function drawLv(){ const b = $('lv'); if(!b || !G.save) return; const k = G.save.xp / xpNeed(G.save.lv); b.innerHTML = '<b>' + w('lv') + ' ' + G.save.lv + '</b><i><u style="width:' + Math.round(k * 100) + '%"></u></i>' + (G.save.treats ? '<small>🍖' + G.save.treats + '</small>' : ''); }
+/* the quest step a quest is on (−1 = not active) */
+function qStep(id){ const a = G.ST && G.ST.data.q[id]; return G.ST && G.ST.status(id) === 'active' && a ? a[0] : -1; }
+const near = (a, b, r) => a && b && Math.hypot(a.x - b.x, a.y - b.y) < r;
+function freeSpot(k){ const s = G.W.spot(k); return s ? G.W.freeNear(s.x, s.y, 2) : null; }
+/* 🐾 your pet follows a little behind Pudding (levels with you, §17w-3) */
+function drawPet(g, sx, sy, k){ const Q = G.Q, o = {t: G.t, face: Q.dir > 0 ? 'right' : 'left', pet: true}; if(Q.moving && Creatures.walkPose) o.pose = Creatures.walkPose(Q.walkT);
+  try { Creatures.drawFor(g, G.save.pet, sx, sy, 88 * k * AK * 0.62, o); } catch(e){} }
+/* 👾 monsters you can see (touch one = a battle — never a surprise battle, §16c) */
+function mobItem(m){ const it = {x: m.x, y: m.y, z: G.W.M.heightAt(Math.floor(m.x), Math.floor(m.y)), mob: m,
+    draw(g, sx, sy, k){ const n = m.n, sp = 15 * k * AK; for(let i = n - 1; i >= 0; i--){ const ox = (i - (n - 1) / 2) * sp * 1.6, oy = (i % 2) * sp * 0.5, b = Math.abs(Math.sin(G.t * 3 + i * 1.7)) * 4 * k;
+        try { Creatures.drawFor(g, m.id, sx + ox, sy + oy - b, 88 * k * AK * 0.62, {t: G.t + i, face: G.H.x < m.x ? 'left' : 'right'}); } catch(e){} }
+      if(m.tag && m.tag !== 'roam'){ const y = sy - 70 * k * AK; g.save(); g.font = '700 ' + Math.round(20 * k) + 'px sans-serif'; g.textAlign = 'center'; g.fillText(m.tag === 'T' ? '🐾' : '⚔️', sx, y + Math.sin(G.t * 4) * 3 * k); g.restore(); } }};
+  return it; }
+function setMob(tag, key, n, spot){ if(G.mobs.some(m => m.tag === tag)) return; const s = freeSpot(spot); if(!s) return; const m = {tag, id: key, n, lv: tag === 'roam' ? 2 + Math.floor(Math.random() * 2) : 2, x: s.x, y: s.y, home: {x: s.x, y: s.y}, wt: Math.random() * 3}; m.it = mobItem(m); G.mobs.push(m); G.items.push(m.it); }
+function dropMob(m){ G.mobs = G.mobs.filter(x => x !== m); G.items = G.items.filter(x => x !== m.it); }
+function syncMobs(){ const m2 = qStep('il1.m2'), keep = {};
+  if(m2 === 2){ setMob('A', 'mangobble', 3, 'mobsA'); keep.A = 1; }
+  if(m2 === 5){ setMob('B', 'mangobble', 2, 'mobsB'); keep.B = 1; }
+  if(qStep('il1.i3') === 0){ setMob('T', 'mangobble', 1, 'tamemob'); keep.T = 1; }
+  if(qStep('il1.d1') === 0 && G.ST.status('il1.m2') === 'done'){ if(!(G.t < (G.goneD1 || 0))) setMob('D1', 'mangobble', 2, 'herbs'); keep.D1 = 1; }   /* 📅 d1 the herb patch (av-s1c) */
+  if(m2 >= 3 || G.ST.status('il1.m2') === 'done'){ ['roam1', 'roam2'].forEach(k => { if(!G.flags['gone.' + k] || G.t > G.flags['gone.' + k]){ if(!G.mobs.some(m => m.spot === k)){ setMob('roam' + k, 'mangobble', 1, k); const m = G.mobs[G.mobs.length - 1]; if(m && m.tag === 'roam' + k){ m.tag = 'roam'; m.spot = k; } } } }); keep.roam = 1; }
+  G.mobs.slice().forEach(m => { if(!keep[m.tag]) dropMob(m); }); }
+/* 🥭 mangoes on the ground (m2 ④) */
+function mangoItem(s, i){ return {x: s.x, y: s.y, z: G.W.M.heightAt(Math.floor(s.x), Math.floor(s.y)), drop: i, draw(g, sx, sy, k){ const b = Math.sin(G.t * 3 + i) * 3 * k, r = 7 * k;
+    g.save(); g.globalAlpha = 0.5 + 0.3 * Math.sin(G.t * 4 + i); g.fillStyle = '#FFE14D'; g.beginPath(); g.ellipse(sx, sy - 2, r * 2.2, r * 0.8, 0, 0, 7); g.fill(); g.restore();
+    g.save(); g.translate(sx, sy - r * 1.6 + b); g.rotate(-0.4); g.fillStyle = '#2A1C14'; g.beginPath(); g.ellipse(0, 0, r * 1.15 + 1.5, r * 0.9 + 1.5, 0, 0, 7); g.fill();
+    const gr = g.createLinearGradient(-r, -r, r, r); gr.addColorStop(0, '#FFE14D'); gr.addColorStop(0.6, '#FFB21A'); gr.addColorStop(1, '#FF7A2E'); g.fillStyle = gr; g.beginPath(); g.ellipse(0, 0, r * 1.15, r * 0.9, 0, 0, 7); g.fill();
+    g.fillStyle = '#4CB13A'; g.beginPath(); g.ellipse(r * 0.6, -r * 0.95, r * 0.5, r * 0.22, -0.5, 0, 7); g.fill(); g.fillStyle = 'rgba(255,255,255,.6)'; g.beginPath(); g.ellipse(-r * 0.4, -r * 0.35, r * 0.3, r * 0.16, -0.6, 0, 7); g.fill(); g.restore(); }}; }
+function syncDrops(){ const on = qStep('il1.m2') === 3, have = G.drops.length; if(on && !have){ const done = (G.ST.data.q['il1.m2'] || [0, 0])[1] || 0; ['mg1', 'mg2', 'mg3'].slice(done).forEach((k, i) => { const s = freeSpot(k); if(s){ const it = mangoItem(s, i); G.drops.push(it); G.items.push(it); } }); }
+  if(!on && have){ G.items = G.items.filter(x => G.drops.indexOf(x) < 0); G.drops = []; } }
+/* 🐔🦀 Landing critters (home base: no fights, S19) — they just potter about */
+function critter(id, spot, say){ const s = freeSpot(spot); if(!s) return; const c = {id, x: s.x, y: s.y, home: s, dir: -1, t: Math.random() * 4, say}; c.it = {x: c.x, y: c.y, z: G.W.M.heightAt(Math.floor(s.x), Math.floor(s.y)),
+    draw(g, sx, sy, k){ try { Creatures.drawFor(g, id, sx, sy, 88 * k * AK * 0.62, {t: G.t + c.t, face: c.dir > 0 ? 'right' : 'left'}); } catch(e){} }}; G.critters.push(c); G.items.push(c.it); }
+/* 👥 who stands where (Noi on the path in m2 ⑤ · Tara in the grove for r1) */
+function placePeople(){ const noi = G.people.find(p => p.id === 'noi'); if(noi){ const s = qStep('il1.m2') === 4 ? freeSpot('noipath') : G.W.spot('noi'); if(s){ noi.x = s.x; noi.y = s.y; noi.z = G.W.M.heightAt(Math.floor(s.x), Math.floor(s.y)); } }
+  const st = G.ST.status('il1.r1'), want = (st === 'open' || st === 'active') && !G.flags['rival.il1.r1'];
+  let tara = G.people.find(p => p.id === 'tara'); if(want && !tara){ tara = personItem('tara', freeSpot('tara')); G.people.push(tara); G.items.push(tara); }
+  if(!want && tara){ G.people = G.people.filter(p => p !== tara); G.items = G.items.filter(x => x !== tara); } }
+/* 🐘 Pudding ran off to Mango Grove (m2 ① ②) */
+function placePudding(){ const s = qStep('il1.m2'); if(s === 0 || s === 1){ const p = freeSpot('pudgrove'); G.P.on = false; G.P.x = G.P.px = p.x; G.P.y = G.P.py = p.y; } else if(G.flags['il1.m1']) G.P.on = true; }
+function setupS1b(){ const s = G.save; drawLv(); if(s.pet && !G.Q){ const p = G.W.freeNear(G.H.x - 1, G.H.y + 1, 2); G.Q = AvWorld.follower(G.W, G.H, {x: p.x, y: p.y, gap: 1.75, on: true}); G.Q.it = {x: G.Q.x, y: G.Q.y, z: G.Q.z, draw: drawPet}; G.items.push(G.Q.it); }
+  if(!G.critters.length){ critter('kaikai', 'kaikai', 'crow'); critter('paddypinch', 'paddy', 'pinch'); }
+  placePudding(); placePeople(); syncMobs(); syncDrops(); dressPads(); }
+/* ⚔️ the ⚔️ button: next to a monster = fight · otherwise a practice swing */
+function swingPress(){ if(G.talking || G.battle) return; if(!G.save.job){ toast(w('soon')); sound('nope'); return; } const m = G.mobs.find(x => near(x, G.H, 1.8)); if(m) return fight(m);
+  const c = G.critters.find(x => near(x, G.H, 1.6)); if(c){ const p = G.V.toScreen(c.it.x, c.it.y, c.it.z); sticker(p.x, p.y - 50 * G.V.zoom, w(c.say)); }
+  heroAct('beat.throw'); sound('tap'); }
+async function fight(m, o){ if(G.battle || G.talking) return; o = o || {}; G.battle = true; G.H.stop(); closeEmotes(); document.body.classList.add('battling'); const s = G.save, J = JOB(), sets = curSets();
+  const cfg = {lang: G.lang, hero: {name: s.name, av: G.heroDressed || G.heroBase, lv: s.lv, job: s.job, set: Math.min(s.set || 0, sets.length - 1), sets}, heroAv: G.heroAv, pet: s.pet ? {id: s.pet, lv: s.lv} : null,
+    foes: o.foes || Array.from({length: m.n}, () => ({id: m.id, lv: m.lv})), help: s.help, tame: m.tag === 'T', treats: s.treats, mode: o.mode, rival: o.rival,
+    script: {toot: m.tag === 'A' ? 2 : 0, swapGlow: m.tag === 'B'}, title: o.title, xpFrom: s.xp / xpNeed(s.lv)};
+  if(o.mode === 'duel') cfg.xp = 15; if(VIL && o.mode !== 'duel') VIL.battleCfg(cfg);
+  const r = await AvBattle.start($('scr-play'), cfg); G.battle = false; document.body.classList.remove('battling'); s.set = AvBattle.last ? AvBattle.last.E.set : s.set; armHero();
+  if(typeof r.treats === 'number') s.treats = r.treats;
+  if(r.res === 'ko'){ const b = freeSpot('mango'); G.H.x = G.H.px = b.x; G.H.y = G.H.py = b.y; pAct('toot', {again: true, on: tootSound}); saveLocal(); return r; }
+  if(o.mode !== 'duel') gainXp(r.xp, r.coins);
+  if(m && m.tag) await afterFight(m, r); if(VIL) VIL.afterFight(m, r); drawTracker(); updateGoal(); saveLocal(); return r; }
+async function afterFight(m, r){
+  if(m.tag === 'A'){ dropMob(m); G.ST.event({do: 'beat', what: 'mangobble', n: 3}); }
+  else if(m.tag === 'B'){ if(r.swapUsed){ dropMob(m); G.flags['swap.taught'] = 1; G.ST.event({do: 'beat', what: 'mangobble', n: 2}); } else { toast(w('trySwap'), 3200); } }
+  else if(m.tag === 'T' && r.res === 'tamed'){ dropMob(m); G.save.pets.push({id: 'mangobble', lv: G.save.lv}); G.ST.event({do: 'tame', what: 'mangobble'}); }
+  else if(m.tag === 'roam'){ dropMob(m); G.flags['gone.' + m.spot] = G.t + 40; }
+  else if(m.tag === 'D1' && r.res === 'win'){ dropMob(m); G.goneD1 = G.t + 12; } }
+/* 💬 the talks this round drives */
+function talkP(id, o){ return new Promise(res => { G.talking = true; document.body.classList.add('talking'); G.H.stop(); closeEmotes();
+  Story.talk($('scr-play'), id, Object.assign({state: G.ST, who: 'avateer.noi', me: G.save.name, meAv: G.heroAv, onLine}, o || {})).then(go => { G.people.forEach(p => p.face = 'happy'); G.talking = false; document.body.classList.remove('talking'); drawTracker(); updateGoal(); res(go); }); }); }
+function afterTalkS1b(full, r){ const q = r.quest;
+  if(q === 'il1.m2' && r.mode === 'start' && r.go === 'accept'){ placePudding(); toast(w('goMango'), 2600); }
+  if(q === 'il1.i3' && r.mode === 'start' && r.go === 'accept'){ G.save.treats += 3; drawLv(); syncMobs(); }
+  if(q === 'il1.i3' && r.mode === 'end' && r.result){ G.save.treats += 5; gainXp(20); G.flags['pet.house'] = 1; toast(w('petHome'), 2800); }
+  if(q === 'il1.r1' && r.mode === 'start' && r.go === 'accept') setTimeout(duelTara, 300);
+  syncMobs(); placePeople(); }
+function onStepS1b(r){ if(r.id === 'il1.m2'){
+    if(r.stepDone && r.step === 1){ G.flags['pudding.follows'] = 1; G.P.on = true; setTimeout(() => toast(w('beat3'), 2200), 300); }
+    if(r.stepDone && r.step === 2){ setTimeout(() => talkP('t.il1.m2.step3').then(() => { syncDrops(); updateGoal(); }), 500); }
+    if(r.stepDone && r.step === 3){ placePeople(); }
+    if(r.stepDone && r.step === 4){ G.flags['swap.got'] = 1; armHero(); setTimeout(() => toast(w('newW'), 3200), 300); sound('win'); }
+    if(r.ready) setTimeout(m2End, 300); }
+  if(VIL) VIL.onStep(r); syncMobs(); syncDrops(); placePeople(); drawTracker(); updateGoal(); saveLocal(); }
+async function m2End(){ if(G.talking || G.battle) return setTimeout(m2End, 400); G.P.hold = true; await talkP('t.il1.m2.end', {label: '📖 ' + Story.qtitle(Story.get('il1.m2')), quest: 'il1.m2'});
+  const res = G.ST.turnIn('il1.m2'); Object.assign(G.flags, {'il1.m2': 1, 'swap.taught': 1, 'pudding.follows': 1}); if(res && res.reward) gainXp(res.reward.xp || 0, res.reward.coins || 0);
+  G.P.hold = false; placePeople(); syncMobs(); saveLocal(); saveServer('m2'); if(res){ G.talking = true; await Story.done($('scr-play'), 'il1.m2', {reward: res.reward}); G.talking = false; } drawTracker(); updateGoal(); }
+async function duelTara(){ const s = G.save, mine = s.pet || 'emberpup', theirs = AvBattle.COUNTER[mine], tp = Story.person('tara') || {}, tav = Object.assign({}, defaultAvatar(tp.av || 'Tara'), tp.look || {});
+  const r = await fight({tag: 'R', n: 1}, {mode: 'duel', foes: [{id: theirs, lv: s.lv, name: 'Tara\'s ' + AvBattle.PETS[theirs].names[0]}], rival: {name: 'Tara', av: tav, pet: theirs}, title: '🧭 Tara'});
+  G.flags['tara.pet'] = theirs; G.flags['tara.island'] = 1; G.flags['rival.il1.r1'] = r.res === 'win' ? 'won' : 'lost'; G.ST.event({do: 'beat', what: 'tara'});
+  await talkP(r.res === 'win' ? 't.il1.r1.end2' : 't.il1.r1.end', {label: '🧭 ' + Story.qtitle(Story.get('il1.r1')), quest: 'il1.r1'});
+  const res = G.ST.turnIn('il1.r1'); if(res && res.reward) gainXp(res.reward.xp || 0); if(r.res === 'win') { G.save.treats += 1; drawLv(); }
+  placePeople(); saveLocal(); saveServer('r1'); if(res){ G.talking = true; await Story.done($('scr-play'), 'il1.r1', {reward: res.reward}); G.talking = false; } drawTracker(); updateGoal(); }
+/* 🎯 goals for this round's quests (the tracker shows the quest; the pill says what to do now) */
+function goalS1b(){ const m2 = G.ST.status('il1.m2'), s = qStep('il1.m2');
+  if(s === 0) return {text: w('goMango'), target: G.W.spot('mango')};
+  if(s === 1) return {text: w('findPud'), target: {x: G.P.x, y: G.P.y}};
+  if(s === 2){ const m = G.mobs.find(x => x.tag === 'A'); return {text: w('beat3'), target: m}; }
+  if(s === 3){ const d = G.drops[0]; return {text: w('mangoes'), n: (G.ST.data.q['il1.m2'] || [0, 0])[1] || 0, of: 3, target: d}; }
+  if(s === 4) return {text: w('noiPath'), target: G.people.find(p => p.id === 'noi')};
+  if(s === 5){ const m = G.mobs.find(x => x.tag === 'B'); return {text: w('swap2'), target: m}; }
+  if(s === 6) return {text: w('toStream'), target: G.W.spot('stream')};
+  if(m2 === 'open') return {text: w('talkNoi'), target: G.people.find(p => p.id === 'noi')};
+  const i3 = G.ST.status('il1.i3'), r1 = G.ST.status('il1.r1');
+  if(qStep('il1.i3') === 0){ const m = G.mobs.find(x => x.tag === 'T'); return {text: w('tame1'), target: m}; }
+  if(i3 === 'turnin') return {text: w('backNoi'), target: G.people.find(p => p.id === 'noi')};
+  if(r1 === 'open' && G.W.zoneAt(G.H.x, G.H.y) === 'mango') return {text: w('duel'), target: G.people.find(p => p.id === 'tara')};
+  if(i3 === 'open') return {text: w('talkNoi'), target: G.people.find(p => p.id === 'noi')};
+  return undefined; }
+/* ⏱️ each tick: Pudding found · mangoes · the stream · touching a monster · critters potter */
+function stepS1b(dt){ if(G.Q) G.Q.step(dt); if(G.talking || !G.ST) return; const H = G.H, s = qStep('il1.m2');
+  if(s === 0 && G.W.zoneAt(H.x, H.y) === 'mango') G.ST.event({do: 'go', what: 'mango'});
+  if(s === 1 && near(G.P, H, 1.8) && !H.moving){ talkP('t.il1.m2.step2').then(() => { G.ST.event({do: 'talk', who: 'avateer.pudding'}); }); return; }
+  if(s === 3){ const d = G.drops.find(x => near(x, H, 0.9)); if(d){ G.drops = G.drops.filter(x => x !== d); G.items = G.items.filter(x => x !== d); sound('pop'); const p = G.V.toScreen(d.x, d.y, d.z); sticker(p.x, p.y - 30 * G.V.zoom, '🥭'); G.ST.event({do: 'collect', what: 'mango'}); return; } }
+  if(s === 6 && near(G.W.spot('stream'), H, 2.8)){ G.ST.event({do: 'go', what: 'stream'}); return; }
+  const m = G.mobs.find(x => near(x, H, 1.05)); if(m && !G.J.on){ fight(m); return; }
+  G.mobs.forEach(x => { x.wt -= dt; if(x.wt < 0){ x.wt = 2 + Math.random() * 3; const a = Math.random() * 7, nx = x.home.x + Math.cos(a) * 0.8, ny = x.home.y + Math.sin(a) * 0.8; if(G.W.M.walk(Math.floor(nx), Math.floor(ny))){ x.tx = nx; x.ty = ny; } }
+    if(x.tx != null){ const dx = x.tx - x.x, dy = x.ty - x.y, d = Math.hypot(dx, dy); if(d < 0.05){ x.tx = null; } else { x.x += dx / d * Math.min(d, dt * 0.6); x.y += dy / d * Math.min(d, dt * 0.6); } x.it.x = x.x; x.it.y = x.y; } });
+  G.critters.forEach(c => { c.t += dt; if(Math.sin(c.t * 0.7) > 0.96 && !c.go){ c.go = 1; const a = Math.random() * 7; c.tx = c.home.x + Math.cos(a) * 1.2; c.ty = c.home.y + Math.sin(a) * 1.2; }
+    if(c.go){ const dx = c.tx - c.x, dy = c.ty - c.y, d = Math.hypot(dx, dy); if(d < 0.05 || !G.W.M.walk(Math.floor(c.tx), Math.floor(c.ty))) c.go = 0; else { c.dir = dx > 0 ? 1 : -1; c.x += dx / d * Math.min(d, dt * 0.9); c.y += dy / d * Math.min(d, dt * 0.9); c.it.x = c.x; c.it.y = c.y; } } }); }
+
+/* ---------- 🔑 av-s1c: the village (AvateerVillage) gets the page's helpers once ---------- */
+let VIL = null;
+function villageApi(){ return {G, toast, sticker, sound, tone, talkP, talkTo, gainXp, pAct, qStep, freeSpot, near, drawTracker, updateGoal, saveLocal, saveServer, drawLv, closeEmotes, setMob, syncMobs,
+  dropTag: tag => G.mobs.filter(m => m.tag === tag).forEach(dropMob), bag: () => LW ? LW.bag : null, lwSave: () => { if(LW) lwSave(); }}; }
+
+/* ---------- ⏱️ loop ---------- */
+function step(dt){ if(!G.ready || G.battle) return; G.playSec += dt; stepS1b(dt); if(VIL) VIL.step(dt); G.H.step(dt); G.J.step(dt); if(G.pending === 'hop' && G.J.on && !G.J.busy){ G.pending = null; G.J.press(); }
+  if(G.H.hop >= 0){ G.H.hop += dt; if(G.H.hop > 0.5) G.H.hop = -1; }
+  G.P.step(dt); if(G.act && G.act.run.done) G.act = null;
+  G.footT -= dt; if(G.footT <= 0){ G.footT = 0.5; footsteps(); }
+  watch(dt); }
+function watch(dt){ if(G.talking || !G.ST) return; const H = G.H, z = G.W.zoneAt(H.x, H.y);
+  /* auto-talk: a person with a NEW quest or a talk step, when you stop next to them */
+  G.people.forEach(p => { const d = Math.hypot(p.x - H.x, p.y - H.y), m = G.ST.markerFor(p.pid); if(d < 1.5 && !H.moving && !G.J.on && m && (m.state === 'open' || m.state === 'turnin') && !(m.kind === 'daily' && m.state === 'open') && G.t - (G.lastTalk[p.pid] || -99) > 2.5) talkTo(p.id); });   /* 📅 a daily's new mark waits for a tap (or the 📋 board) */
+  /* step ⑤ go inn */
+  if(stepIs(4)){ const s = G.W.spot('inn'); if(Math.hypot(s.x - H.x, s.y - H.y) < 1.3) G.ST.event({do: 'go', what: 'inn'}); }
+  /* 🥭 islets */
+  if(z === 'mango' && !G.flags['seen.mango']){ G.flags['seen.mango'] = 1; pAct('cheer', {again: true}); setTimeout(() => pudSays(w('yay')), 200); updateGoal(); saveLocal(); }
+  const pond = G.W.spot('pond'), stream = G.W.spot('stream');
+  if(pond && Math.hypot(pond.x - G.P.x, pond.y - G.P.y) < 2.4 && !G.near.pond){ G.near.pond = 1; pAct('splash', {again: true}); } else if(pond && Math.hypot(pond.x - G.P.x, pond.y - G.P.y) > 4) G.near.pond = 0;
+  if(stream && Math.hypot(stream.x - G.P.x, stream.y - G.P.y) < 2.6 && !G.near.stream){ G.near.stream = 1; pAct('scared', {again: true}); setTimeout(() => pudSays(w('tooDeep')), 250); } else if(stream && Math.hypot(stream.x - G.P.x, stream.y - G.P.y) > 5) G.near.stream = 0;
+  /* 🐘 she toots now and then (off-key — it makes everyone laugh) */
+  G.tootT -= dt; if(G.tootT <= 0){ G.tootT = 14 + Math.random() * 12; if(G.P.on && !G.pact && !G.P.moving) pAct('toot', {on: () => { tootSound(); pudSays(w('toot')); }}); }
+  /* a device copy every 20 s of play */
+  G.saveT += dt; if(G.saveT > 20){ G.saveT = 0; saveLocal(); } }
+function render(alpha, t){ G.t = t; const H = G.H, P = G.P, lerp = (a, b) => a + (b - a) * alpha;
+  H.it.x = lerp(H.px, H.x); H.it.y = lerp(H.py, H.y); H.it.z = H.z; P.it.x = lerp(P.px, P.x); P.it.y = lerp(P.py, P.y); P.it.z = P.z; if(G.Q){ G.Q.it.x = lerp(G.Q.px, G.Q.x); G.Q.it.y = lerp(G.Q.py, G.Q.y); G.Q.it.z = G.Q.z; }
+  try { Props.tick(G.W.items, t); Props.seeThrough(G.V, G.W.items, [H.it, P.it].concat(G.Q ? [G.Q.it] : [])); } catch(e){}
+  Iso.frame(G.V, {items: G.items, t, groundFx: groundFx, airFx: airFx});
+  guide(); }
+function groundFx(g, V){ if(G.foot && Iso.footsteps) try { Iso.footsteps(g, [{x: G.H.x, y: G.H.y}].concat(G.foot), (x, y) => V.toScreen(x, y, G.W.M.heightAt(Math.floor(x), Math.floor(y))), {t: G.t, col: 'rgba(255,178,26,.9)', pulse: !calm, size: 3.6 * V.zoom}); } catch(e){} }
+function airFx(g, V){ const q = G.hint, J = G.J;
+  G.W.gates.forEach(it => { if(it.touchFx){ const p = (G.t - it.touchFx.t0) / (Props.TOUCH_MS / 1000); if(!Props.touchFx(g, V, it, p)) it.touchFx = null; } });
+  if(q && q.gate){ const n = J.on && J.on === q.gate ? J.next() : 1; if(n > 0) Props.hopHint(g, V, q.gate, n, G.t); }
+  else if(J.on){ const n = J.next(); if(n >= 0 && n < J.hops.length) Props.hopHint(g, V, J.on, J.dir > 0 ? n : n + 1, G.t); } }
+
+/* ---------- 🕹️ controls ---------- */
+function controls(){
+  G.V.onTap = cell => { if(!cell || G.talking) return; closeEmotes(); const x = cell.i + 0.5, y = cell.j + 0.5, p = G.people.find(q => Math.hypot(q.x - x, q.y - y) < 1.2);
+    if(p){ const s = G.W.freeNear(p.x + (G.H.x < p.x ? -0.9 : 0.9), p.y + 0.3, 2); G.H.to(s.x, s.y).then(ok => { if(ok || Math.hypot(p.x - G.H.x, p.y - G.H.y) < 2) talkTo(p.id); }); return; }
+    G.H.to(x, y); };
+  const st = $('stick'), kn = st.querySelector('.knob'), T = UI.stickTracker(st, {player: CURRENT_PLAYER}); let on = null;
+  const move = v => { const m = Math.min(1, v.m); kn.style.transform = 'translate(' + (v.fx * 30) + '%,' + (v.fy * 30) + '%)';
+    if(m < 0.2){ G.H.vx = G.H.vy = 0; return; } const sx = v.x / (v.m || 1), sy = v.y / (v.m || 1), wx = sx / 2 + sy, wy = sy - sx / 2, L = Math.hypot(wx, wy) || 1; G.H.vx = wx / L * m; G.H.vy = wy / L * m; };
+  st.addEventListener('pointerdown', e => { if(G.talking) return; closeEmotes(); on = e.pointerId; st.setPointerCapture(e.pointerId); move(T.start(e)); e.preventDefault(); });
+  UI.onFastMove(st, e => { if(e.pointerId === on) move(T.at(e)); });
+  const up = e => { if(e.pointerId !== on) return; on = null; G.H.vx = G.H.vy = 0; kn.style.transform = ''; }; st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up);
+  const press = (b, fn) => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if(!G.talking) fn(); });
+  press($('b-jump'), jumpPress); press($('b-emote'), openEmotes); press($('b-swing'), swingPress);
+  $('b-lang').onclick = () => { setLang(G.lang === 'th' ? 'en' : 'th'); saveLocal(); };
+  addEventListener('keydown', e => { if(G.talking || G.battle || e.repeat || e.target.tagName === 'INPUT') return; if(e.code === 'Space'){ jumpPress(); e.preventDefault(); } if(e.code === 'KeyE') openEmotes(); if(e.code === 'KeyF') swingPress(); });
+  const keys = {}; const kv = () => { const x = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0), y = (keys.ArrowDown || keys.KeyS ? 1 : 0) - (keys.ArrowUp || keys.KeyW ? 1 : 0);
+    if(!x && !y){ if(on == null){ G.H.vx = G.H.vy = 0; } return; } const wx = x / 2 + y, wy = y - x / 2, L = Math.hypot(wx, wy); G.H.vx = wx / L; G.H.vy = wy / L; };
+  addEventListener('keydown', e => { if(e.target.tagName === 'INPUT') return; if(/^(Arrow|Key[WASD])/.test(e.code)){ keys[e.code] = 1; if(!G.talking) kv(); } }); addEventListener('keyup', e => { if(keys[e.code]){ delete keys[e.code]; kv(); } });
+  addEventListener('pagehide', () => { saveLocal(); saveServer('leave'); }); document.addEventListener('visibilitychange', () => { if(document.hidden){ saveLocal(); saveServer('hide'); } });
+  dressPads(); G.padReady = true; layoutPads(); addEventListener('resize', () => requestAnimationFrame(() => { layoutPads(); drawTracker(); placeGoal(); }));
+}
+function dressPads(){ UI.pad.dress($('b-jump'), '🦘', w('jump'), '#22A867', true); UI.pad.dress($('b-emote'), '🎭', w('emote'), '#9B5DE5'); UI.pad.dress($('b-swing'), '⚔️', w('fight'), G.save && G.save.job ? '#FF6B5B' : '#AEB6C2');
+  $('b-swing').classList.toggle('locked', !(G.save && G.save.job));   /* av-s1c: the ⚔️ petal unlocks once you have a weapon (it kept the S1a 🔒) */
+  if(G.padReady) layoutPads(); }   /* av-s1b2: UI.pad.dress rewrites the button → the 🌸 petal shape (the only part you can tap) must be laid out again */
+function layoutPads(){ const top = $('top'), nav = $('back-btn-nav'); top.style.paddingLeft = '';   /* the 🧭 nav group (UI.navBar) sits out of the flow — the 📖 tracker starts after it */
+  if(nav && getComputedStyle(nav).position !== 'static'){ const nr = nav.getBoundingClientRect(); if(nr.width) top.style.paddingLeft = Math.max(0, Math.round(nr.right - top.getBoundingClientRect().left + 8)) + 'px'; }
+  /* 📖 the tracker gets its own row under the top buttons when the row is too tight (phones upright) */
+  const trk = $('trk'); trk.classList.remove('row2'); const rr = $('right').getBoundingClientRect(), tl = top.getBoundingClientRect().left + (parseFloat(top.style.paddingLeft) || 0);
+  if(rr.left - tl - 16 < 220){ trk.classList.add('row2'); trk.style.top = Math.round(Math.max(rr.bottom, nav ? nav.getBoundingClientRect().bottom : 0) + 6) + 'px'; } else trk.style.top = '';
+  const box = $('btns'); UI.pad.petals(box, $('b-jump'), [$('b-emote'), $('b-swing')], {fit: true});
+  const st = $('stick'); st.style.width = st.style.height = ''; const sr = st.getBoundingClientRect(), left = Math.min(...[...box.querySelectorAll('button')].filter(x => x.offsetParent).map(x => x.getBoundingClientRect().left));
+  if(left - sr.left - 18 < sr.width) st.style.width = st.style.height = Math.max(104, Math.round(left - sr.left - 18)) + 'px';
+  $('toast').style.bottom = Math.round(innerHeight - Math.min(st.getBoundingClientRect().top, box.getBoundingClientRect().top) + 10) + 'px';
+  if(G.V){ const t = Math.max($('top').getBoundingClientRect().bottom, trk.getBoundingClientRect().bottom) + 6, b = innerHeight - Math.min(st.getBoundingClientRect().top, box.getBoundingClientRect().top) + 6; G.V.setPad({t: Math.round(t), b: Math.round(Math.min(b, innerHeight * 0.4))}); } }
+
+/* ---------- 🎒 bag + 👗 my look (LootKit + AvatarWear + LootWear, av-wear4) — the bag + look live in the save's device copy for S1 ---------- */
+const LW = (window.LootWear && window.Loot) ? {bag: null, look: {}} : null;
+function lwKey(k){ return 'sp_avateer_' + k + ':' + (CURRENT_PLAYER || 'guest'); }
+function lwSave(){ try { localStorage.setItem(lwKey('bag'), JSON.stringify(LW.bag.toJSON())); localStorage.setItem(lwKey('look'), JSON.stringify(LW.look)); } catch(e){} }
+function lwStart(){ if(!LW){ $('b-bag').classList.add('hidden'); G.redress = () => { G.heroDressed = lookAv(); armHero(); }; G.redress(); return; } let s = null, l = null; try { s = JSON.parse(localStorage.getItem(lwKey('bag')) || 'null'); l = JSON.parse(localStorage.getItem(lwKey('look')) || 'null'); } catch(e){}
+  LW.bag = Loot.bag(s || {}); LW.look = l || {};
+  if(!s){ ['head', 'body', 'feet'].forEach((sl, i) => { LW.bag.add({base: 'wear.isl.jungle.' + sl, tier: 0, lv: 1, seed: 11 + i, sock: 0, runes: []}); LW.bag.wear(LW.bag.g.length - 1, sl); }); lwSave(); }
+  const dress = () => { try { G.heroDressed = LootWear.dressFor(lookAv(), LW.bag, LW.look); } catch(e){ G.heroDressed = lookAv(); } armHero(); }; dress(); G.redress = dress;
+  $('b-bag').onclick = () => { if(G.talking) return; if(Loot.react) Loot.react(); document.body.classList.add('lw-open');
+    LootWear.bagSheet($('scr-play'), LW.bag, {av: G.heroBase, look: LW.look, jobs: {}, theme: 'gold', basic: true,
+      onLook: l => { LW.look = l; dress(); lwSave(); }, onChange: () => { dress(); lwSave(); }, onClose: () => document.body.classList.remove('lw-open')}); }; }
+
+window.AVATEER = {G, WORDS, setLang, talkTo, jumpPress, doEmote, openEmotes, cleanName, okName, saveLocal, saveServer, snapshot, goalNow, stepIs, fight, swingPress, gainXp, xpNeed, qStep, village: () => VIL, bag: () => LW ? LW.bag : null};
+boot().catch(e => { if(window.console) console.error(e); $('load-text').textContent = '⚠️ ' + (e && e.message || e); });
+})();
