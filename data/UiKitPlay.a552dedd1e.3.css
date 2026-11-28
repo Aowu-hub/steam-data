@@ -1,0 +1,4 @@
+
+  /* 🎨 24ink: light card inside a dark look = dark ink (UiKit tagMenus → UI.inkGuard) */
+  .t-ink{--ink:#2B2D42 !important;--ink-soft:#5B6480 !important;--k-ink:#2B2D42 !important;--k-soft:#5B6480 !important;}
+  :where(.t-ink){color:#2B2D42;}
