@@ -1,9 +1,13 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
+  "Avateer.22362dae3c.1.css": "2026-11-28T15:21:35.572Z",
+  "Avateer.22362dae3c.2.js": "2026-11-28T15:21:35.572Z",
+  "Avateer.22362dae3c.3.js": "2026-11-28T15:21:35.572Z",
   "Avateer.c41f34da8f.1.css": "2026-11-28T12:25:49.764Z",
   "Avateer.c41f34da8f.2.js": "2026-11-28T12:25:49.764Z",
   "Avateer.c41f34da8f.3.js": "2026-11-28T12:25:49.764Z",
+  "AvateerBattle.d660ae15f7.1.js": "2026-11-28T15:21:35.572Z",
   "AvateerPets.979882452f.1.js": "2026-11-28T12:25:49.764Z",
   "CreatureElephant.ac496d5b88.1.js": "2026-11-28T12:25:49.764Z",
   "LootWear.4434be5b94.1.js": "2026-11-28T12:25:49.764Z",
