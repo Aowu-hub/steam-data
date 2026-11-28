@@ -1,6 +1,8 @@
 {
  "_": "sm-8: site files that left the current build, with the date they left. Deleted 0.125 days later by tools/remote.mjs --prune (current files are never touched).",
  "retired": {
+  "AvatarActing.c02b5a3b7e.1.js": "2026-11-28T10:58:49.992Z",
+  "AvatarKit.c1de50c3a5.1.js": "2026-11-28T10:58:49.992Z",
   "Avateer.16aa3cb329.1.css": "2026-11-28T08:47:46.912Z",
   "Avateer.16aa3cb329.2.js": "2026-11-28T08:47:46.912Z",
   "Avateer.16aa3cb329.3.js": "2026-11-28T08:47:46.912Z",
