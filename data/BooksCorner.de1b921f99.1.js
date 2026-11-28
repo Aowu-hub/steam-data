@@ -1,0 +1,420 @@
+
+/* 📚 BooksCorner — opened by Books.open() from the 🎴 Gameroom strip. ONE screen on top of the Gameroom (◀ Gameroom), no page change.
+   Shelf (6 planks in Aowu's order) → tap an open spine → 📖 cover (▶ Read it myself · 🔊 Read it to me) → the reader:
+   big 3:2 picture + ≤ 2 lines (the line being read glows) · ‹ › + page dots (⭐ key pages gold, back pages green) · 👂 tap-to-hear ·
+   page turns in beats (corner lifts → turns + paper whoosh → lands + settle; ⭐ pages land with a gold shimmer) · back pages
+   🔬 STEAM card · 💛 feelings card · 💬 grown-up question · The End (⭐ Read again · ▶ next book). EN / ไทย one at a time, per player.
+   No page ever scrolls (7 sizes): the picture is sized from the free box. Tests: Test Harness/rounds/gr-15a/books.test.js.
+     BooksCorner.open([bookId]) · close() · view() → 'shelf' | 'cover' | 'read' | '' · page() · go(n) · next() · prev() · hear() · readAloud(on) */
+(function(){
+  if(window.BooksCorner) return;
+  const ROUND = 'gr-15a';
+  const CSS = `
+.bk-root{position:fixed;inset:0;z-index:850;display:flex;flex-direction:column;overflow:hidden;color:#3B2A1E;font-family:'Nunito',sans-serif;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  background:radial-gradient(120% 70% at 18% 0%,#FFF1D2 0%,rgba(255,241,210,0) 60%),linear-gradient(180deg,#F7D9B5 0%,#EFC79C 62%,#E2AE7E 100%);}
+.bk-root.hidden{display:none;}
+.bk-root *{box-sizing:border-box;}
+.bk-root .th,.bk-root[data-lang="th"] .bk-tt{font-family:'Mitr','Noto Sans Thai','Nunito',sans-serif;}
+.bk-nook{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.bk-win{position:absolute;left:4%;top:-4%;width:min(26vw,220px);aspect-ratio:3/4;border-radius:14px 14px 0 0;background:linear-gradient(180deg,#BFE6FF,#FFF6D6);border:7px solid #B07A4A;box-shadow:inset 0 0 0 3px #8A5530;opacity:.9;}
+.bk-win::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:6px;margin-left:-3px;background:#B07A4A;}
+.bk-win::after{content:"";position:absolute;left:0;right:0;top:46%;height:6px;background:#B07A4A;}
+.bk-beam{position:absolute;left:2%;top:0;width:min(50vw,460px);height:100%;background:linear-gradient(115deg,rgba(255,250,220,.55),rgba(255,250,220,0) 62%);clip-path:polygon(4% 0,52% 0,100% 100%,30% 100%);}
+.bk-lamp{position:absolute;right:6%;top:0;width:4px;height:min(9vh,70px);background:#6B4426;}
+.bk-lamp::after{content:"";position:absolute;left:50%;bottom:-26px;width:54px;height:30px;margin-left:-27px;border-radius:30px 30px 6px 6px;background:linear-gradient(#FF9A3C,#E06A2A);box-shadow:0 18px 50px 18px rgba(255,200,90,.45);}
+.bk-rug{position:absolute;left:8%;right:8%;bottom:-6vh;height:16vh;border-radius:50%;background:repeating-radial-gradient(ellipse at center,#C9534A 0 10px,#E8B04B 10px 18px,#C9534A 18px 30px);opacity:.55;}
+.bk-bar{position:relative;z-index:2;display:flex;align-items:center;gap:8px;padding:max(8px,env(safe-area-inset-top)) 10px 6px;min-height:58px;}
+.bk-bar .bk-ttl{flex:1;min-width:0;text-align:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:clamp(1.05rem,2.6vw,1.45rem);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#4A2A14;}
+.bk-bar .bk-ttl small{display:block;font-family:'Nunito',sans-serif;font-weight:800;font-size:.72rem;color:#8A5A34;}
+.bk-root .sp-btn{font:inherit;font-weight:800;min-height:44px;padding:8px 14px;border:0;cursor:pointer;}
+@media (max-width:430px){ .bk-root[data-view="shelf"] .bk-bar .bk-ttl{visibility:hidden;} .bk-bar .bk-ttl small{display:none;} }
+html.bk-reading #ui-fb-btn{display:none !important;}
+.bk-lang{display:flex;border-radius:999px;overflow:hidden;box-shadow:inset 0 0 0 2px #C99062,0 3px 0 #B9845A;background:#FFF8EE;flex:0 0 auto;}
+.bk-lang button{font:inherit;font-weight:900;font-size:.86rem;border:0;background:transparent;color:#7A4A2A;min-height:40px;min-width:46px;padding:4px 10px;cursor:pointer;}
+.bk-lang button.on{background:#7A4A2A;color:#FFF6E6;}
+.bk-gear{flex:0 0 auto;}
+.bk-main{position:relative;z-index:1;flex:1;min-height:0;display:flex;flex-direction:column;padding:0 10px calc(var(--safe-b,14px) - 4px);}
+/* ---------- 🪵 the shelf ---------- */
+.bk-shelf{flex:1;min-height:0;display:grid;gap:10px 14px;grid-template-columns:repeat(var(--cols,2),minmax(0,1fr));grid-template-rows:repeat(var(--rows,3),minmax(0,1fr));}
+.bk-plank{position:relative;min-height:0;display:flex;flex-direction:column;border-radius:14px;background:linear-gradient(180deg,rgba(120,70,36,.16),rgba(120,70,36,.30));box-shadow:inset 0 2px 0 rgba(255,255,255,.25);padding:4px 10px 0;}
+.bk-plank h3{margin:0;display:flex;align-items:center;gap:6px;font-family:'Fredoka',sans-serif;font-weight:700;font-size:clamp(.82rem,1.9vw,1.02rem);color:#4A2A14;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bk-plank h3 i{font-style:normal;}
+.bk-row{flex:1;min-height:0;display:flex;align-items:flex-end;gap:var(--gap,8px);padding:3px 6px 0;}
+.bk-board{height:12px;margin:0 -10px;border-radius:0 0 12px 12px;background:linear-gradient(#A86A3A,#7A4622);box-shadow:0 4px 0 #5A321A,inset 0 2px 0 rgba(255,255,255,.25);}
+.bk-sp{position:relative;flex:0 0 var(--sw,44px);height:var(--sh,92%);max-height:100%;border:0;padding:0;cursor:pointer;border-radius:7px 7px 3px 3px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--c1) 70%,#000) 0,var(--c1) 18%,color-mix(in srgb,var(--c1) 82%,#fff) 46%,var(--c1) 78%,color-mix(in srgb,var(--c1) 70%,#000) 100%);
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.25),0 3px 0 rgba(60,30,10,.35);transform-origin:50% 100%;transition:transform .16s;color:#fff;font:inherit;}
+.bk-sp::before,.bk-sp::after{content:"";position:absolute;left:3px;right:3px;height:5px;border-radius:2px;background:var(--c2);opacity:.9;}
+.bk-sp::before{top:9%;} .bk-sp::after{bottom:9%;}
+.bk-sp .sl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(180deg);writing-mode:vertical-rl;white-space:nowrap;font-family:'Fredoka',sans-serif;font-weight:700;font-size:var(--sf,15px);
+  text-shadow:0 1px 0 rgba(0,0,0,.45);max-height:68%;overflow:hidden;text-overflow:ellipsis;}
+.bk-root[data-lang="th"] .bk-sp .sl{font-family:'Mitr','Fredoka',sans-serif;font-weight:500;}
+.bk-sp .se{position:absolute;left:50%;top:18%;transform:translateX(-50%);width:calc(var(--sw,44px) - 10px);aspect-ratio:1;border-radius:50%;background:var(--c2);display:flex;align-items:center;justify-content:center;font-size:calc(var(--sw,44px) * .36);box-shadow:inset 0 0 0 2px rgba(0,0,0,.2);}
+.bk-sp .sn{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);font-weight:900;font-size:.7rem;color:var(--c2);}
+.bk-sp:active{transform:translateY(2px) scale(.98);}
+@media (hover:hover){ .bk-sp.o:hover{transform:translateY(-6px) rotate(-2deg);} }
+.bk-sp.nw{animation:bk-glow 1.6s ease-in-out infinite;}
+.bk-sp .tag{position:absolute;top:-10px;left:50%;transform:translateX(-50%) rotate(-4deg);background:#FF4D8D;color:#fff;font-weight:900;font-size:.66rem;padding:1px 6px;border-radius:8px;box-shadow:0 2px 0 #B02A5E;white-space:nowrap;z-index:2;}
+.bk-sp.l{background:repeating-linear-gradient(135deg,#9B9087 0 6px,#8A8077 6px 12px);box-shadow:inset 0 0 0 2px rgba(0,0,0,.22),0 3px 0 rgba(60,30,10,.3);color:#F2ECE6;}
+.bk-sp.l::before,.bk-sp.l::after{background:#B9AFA6;}
+.bk-sp.l .se{background:#C9C0B8;filter:grayscale(1);opacity:.75;}
+.bk-sp .lk{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:calc(var(--sw,44px) * .42);filter:drop-shadow(0 1px 0 rgba(0,0,0,.4));z-index:1;}
+.bk-sp.l .sl{opacity:.55;}
+.bk-sp.s{background:rgba(255,248,236,.45);box-shadow:inset 0 0 0 2px rgba(122,74,42,.55);border:2px dashed rgba(122,74,42,.75);color:#7A4A2A;}
+.bk-sp.s::before,.bk-sp.s::after{display:none;}
+.bk-sp.s .sl{text-shadow:none;opacity:.85;}
+.bk-sp.s .se{background:rgba(255,255,255,.65);}
+.bk-sp .soon{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);font-size:calc(var(--sw,44px) * .34);}
+.bk-sp.g .tag{background:#7B3FD0;box-shadow:0 2px 0 #4B1E94;}
+.bk-sp.lean{transform:rotate(-7deg);transform-origin:0 100%;}
+.bk-note{position:absolute;left:50%;top:64px;transform:translate(-50%,-14px);opacity:0;z-index:5;max-width:min(92vw,460px);background:#FFF8EE;color:#4A2A14;border-radius:18px;padding:10px 16px;font-weight:800;
+  box-shadow:0 6px 0 rgba(90,50,26,.25),inset 0 0 0 2px #E8B97F;transition:opacity .2s,transform .2s;pointer-events:none;text-align:center;line-height:1.3;}
+.bk-note.on{opacity:1;transform:translate(-50%,0);}
+.bk-note b{display:block;font-family:'Fredoka',sans-serif;font-size:1.05rem;}
+/* ---------- 📖 the cover ---------- */
+.bk-cov{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:clamp(14px,4vw,48px);padding:4px 8px 6px;}
+.bk-book{position:relative;flex:0 0 auto;width:var(--bw,300px);aspect-ratio:3/4;border-radius:6px 18px 18px 6px;background:linear-gradient(135deg,var(--c1),color-mix(in srgb,var(--c1) 70%,#000));
+  box-shadow:inset 12px 0 0 rgba(0,0,0,.18),inset 14px 0 0 rgba(255,255,255,.12),0 10px 0 rgba(60,30,10,.25),0 18px 32px rgba(60,30,10,.3);transform:perspective(900px) rotateY(-10deg);overflow:hidden;color:#fff;}
+.bk-book .bp{position:absolute;left:11%;right:7%;top:20%;aspect-ratio:3/2;border-radius:10px;overflow:hidden;box-shadow:0 0 0 4px var(--c2),0 4px 10px rgba(0,0,0,.3);background:#fff;}
+.bk-book .bp svg{display:block;width:100%;height:100%;}
+.bk-book .bt{position:absolute;left:11%;right:7%;bottom:10%;font-family:'Fredoka',sans-serif;font-weight:700;font-size:calc(var(--bw,300px) * .085);line-height:1.15;text-shadow:0 2px 0 rgba(0,0,0,.35);}
+.bk-book .bs{position:absolute;right:7%;top:5%;width:calc(var(--bw,300px) * .15);aspect-ratio:1;border-radius:50%;background:var(--c2);display:flex;align-items:center;justify-content:center;font-size:calc(var(--bw,300px) * .08);box-shadow:inset 0 0 0 3px rgba(0,0,0,.2);}
+.bk-book .bn{position:absolute;left:11%;top:6%;font-weight:900;font-size:calc(var(--bw,300px) * .05);letter-spacing:1px;color:var(--c2);}
+.bk-info{flex:0 1 460px;min-width:0;display:flex;flex-direction:column;gap:10px;}
+.bk-info h2{margin:0;font-family:'Fredoka',sans-serif;font-weight:700;font-size:clamp(1.3rem,3.4vw,2.1rem);line-height:1.12;color:#4A2A14;}
+.bk-info .sub{font-weight:800;color:#8A5A34;font-size:.95rem;}
+.bk-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.bk-chips span{background:#FFF8EE;border-radius:999px;padding:4px 10px;font-weight:800;font-size:.84rem;box-shadow:inset 0 0 0 2px #E8B97F;}
+.bk-go{display:flex;flex-wrap:wrap;gap:10px;}
+.bk-go .sp-btn{min-height:52px;font-size:1.05rem;padding:10px 20px;border-radius:999px;}
+.bk-go .sp-go{--game-a:#A8572A;--game-b:#FF9A3C;}
+/* ---------- 📄 the reader ---------- */
+.bk-rd{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.bk-stage{position:relative;flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;perspective:1600px;}
+.bk-pg{position:absolute;width:var(--pw,600px);height:var(--ph,520px);border-radius:14px;background:#FFFAF0;box-shadow:0 6px 0 rgba(90,50,26,.25),0 12px 28px rgba(60,30,10,.22);display:grid;overflow:hidden;
+  grid-template-rows:var(--pich,400px) 1fr;grid-template-columns:1fr;transform-origin:0 50%;backface-visibility:hidden;}
+.bk-root.side .bk-pg{grid-template-rows:1fr;grid-template-columns:var(--picw,400px) 1fr;}
+.bk-pic{position:relative;min-height:0;overflow:hidden;background:#fff;}
+.bk-pic svg{display:block;width:100%;height:100%;}
+.bk-words{display:flex;flex-direction:column;justify-content:center;gap:4px;padding:6px clamp(10px,2.4vw,22px);min-height:0;overflow:hidden;}
+.bk-ln{margin:0;padding:3px 8px;border-radius:10px;font-weight:800;font-size:var(--fs,20px);line-height:1.32;color:#3B2A1E;transition:background .25s,box-shadow .25s;}
+.bk-ln.on{background:#FFE9A8;box-shadow:inset 0 0 0 2px #FFC845;}
+.bk-root[data-lang="th"] .bk-ln{font-family:'Mitr','Noto Sans Thai','Nunito',sans-serif;font-weight:500;line-height:1.42;}
+.bk-ear{position:absolute;right:10px;top:10px;width:46px;height:46px;border-radius:50%;border:0;background:#FFF8EE;box-shadow:inset 0 0 0 3px #FF9A3C,0 3px 0 rgba(90,50,26,.3);font-size:1.35rem;cursor:pointer;animation:bk-ear 2.2s ease-in-out infinite;z-index:2;}
+.bk-say{position:absolute;right:64px;top:12px;max-width:60%;background:#fff;border-radius:16px;padding:6px 12px;font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.15rem;box-shadow:0 3px 0 rgba(0,0,0,.15),inset 0 0 0 3px #2A2233;opacity:0;transform:scale(.6);transform-origin:100% 50%;transition:opacity .16s,transform .2s cubic-bezier(.3,1.6,.5,1);z-index:2;}
+.bk-say.on{opacity:1;transform:scale(1);}
+.bk-key{position:absolute;left:10px;top:10px;background:#FFC845;color:#4A2A14;border-radius:10px;padding:2px 8px;font-weight:900;font-size:.78rem;box-shadow:0 2px 0 #B8860B;z-index:2;}
+.bk-shim{position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(255,215,64,0) 30%,rgba(255,236,150,.75) 50%,rgba(255,215,64,0) 70%);background-size:260% 100%;opacity:0;z-index:3;}
+.bk-pg.gold .bk-shim{animation:bk-shim 1.1s ease-out .05s 1;}
+.bk-pg.turnF{animation:bk-turnF .62s cubic-bezier(.45,.05,.4,1) forwards;z-index:4;}
+.bk-pg.turnB{transform-origin:100% 50%;animation:bk-turnB .62s cubic-bezier(.45,.05,.4,1) forwards;z-index:4;}
+.bk-pg.turnF::after,.bk-pg.turnB::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0),rgba(60,30,10,.28));pointer-events:none;}
+.bk-pg.land{animation:bk-land .22s ease-out 1;}
+.bk-card{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:16px clamp(14px,4vw,40px);background:radial-gradient(circle at 50% 30%,#F2FFF0,#E3F6DE);}
+.bk-card .ci{width:clamp(64px,14vh,110px);aspect-ratio:1;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:clamp(2rem,7vh,3.6rem);box-shadow:inset 0 0 0 4px #5CB85C,0 4px 0 rgba(0,0,0,.12);}
+.bk-card .ck{font-weight:900;color:#2E7D32;font-size:.95rem;}
+.bk-card h3{margin:0;font-family:'Fredoka',sans-serif;font-weight:700;font-size:clamp(1.2rem,3.4vh,1.8rem);color:#24401F;line-height:1.2;}
+.bk-card p{margin:0;font-weight:800;font-size:var(--fs,19px);line-height:1.38;color:#34502E;max-width:34em;}
+.bk-root[data-lang="th"] .bk-card h3,.bk-root[data-lang="th"] .bk-card p{font-family:'Mitr','Noto Sans Thai',sans-serif;font-weight:500;}
+.bk-end{background:radial-gradient(circle at 50% 30%,#FFF6DA,#FFE3B0);}
+.bk-end .ci{box-shadow:inset 0 0 0 4px #FF9A3C,0 4px 0 rgba(0,0,0,.12);animation:bk-toot .9s ease-in-out 1;}
+.bk-end h3{color:#6B3A12;} .bk-end .ck{color:#A8572A;}
+.bk-end .bk-go{justify-content:center;}
+.bk-toot{font-family:'Fredoka',sans-serif;font-weight:700;color:#FF4D8D;font-size:1.3rem;transform:rotate(-6deg);}
+.bk-nav{display:flex;align-items:center;gap:10px;width:100%;max-width:var(--pw,600px);}
+.bk-nav .sp-btn{flex:0 0 auto;min-width:56px;min-height:48px;font-size:1.3rem;border-radius:16px;}
+.bk-dots{flex:1;min-width:0;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:5px;}
+.bk-dots i{width:9px;height:9px;border-radius:50%;background:rgba(122,74,42,.35);transition:transform .2s,background .2s;}
+.bk-dots i.k{background:#E5A800;box-shadow:0 0 0 2px rgba(229,168,0,.25);}
+.bk-dots i.b{background:#5CB85C;}
+.bk-dots i.on{transform:scale(1.55);background:#7A4A2A;}
+.bk-dots i.k.on{background:#FF9A3C;} .bk-dots i.b.on{background:#2E7D32;}
+.bk-auto.on{--game-a:#2E7D32;--game-b:#7ED957;color:#fff;}
+.bk-grown{position:absolute;right:10px;top:62px;z-index:6;width:min(92vw,340px);background:#FFF8EE;border-radius:18px;padding:12px 14px;box-shadow:0 8px 0 rgba(90,50,26,.25),inset 0 0 0 2px #E8B97F;display:flex;flex-direction:column;gap:8px;}
+.bk-grown.hidden{display:none;}
+.bk-grown b{font-family:'Fredoka',sans-serif;font-size:1.05rem;}
+.bk-grown small{font-weight:700;color:#8A5A34;line-height:1.3;}
+.bk-grown .row{display:flex;gap:8px;align-items:center;}
+.bk-grown input{flex:1;min-width:0;font:inherit;font-weight:900;font-size:1.1rem;letter-spacing:4px;padding:9px 10px;border-radius:12px;border:2px solid #E8B97F;background:#fff;color:#3B2A1E;-webkit-user-select:text;user-select:text;}
+@keyframes bk-glow{0%,100%{box-shadow:inset 0 0 0 2px rgba(0,0,0,.25),0 3px 0 rgba(60,30,10,.35),0 0 0 0 rgba(255,77,141,0);}50%{box-shadow:inset 0 0 0 2px rgba(0,0,0,.25),0 3px 0 rgba(60,30,10,.35),0 0 18px 4px rgba(255,200,90,.85);}}
+@keyframes bk-ear{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+@keyframes bk-shim{0%{opacity:0;background-position:100% 0;}25%{opacity:1;}100%{opacity:0;background-position:0 0;}}
+@keyframes bk-turnF{0%{transform:rotateY(0);}18%{transform:rotateY(-9deg) translateZ(4px);}100%{transform:rotateY(-170deg);opacity:.15;}}
+@keyframes bk-turnB{0%{transform:rotateY(0);}18%{transform:rotateY(9deg) translateZ(4px);}100%{transform:rotateY(170deg);opacity:.15;}}
+@keyframes bk-land{0%{transform:scale(.985) translateY(3px);}70%{transform:scale(1.004);}100%{transform:none;}}
+@keyframes bk-toot{0%{transform:scale(1);}30%{transform:scale(.88) rotate(-6deg);}60%{transform:scale(1.12) rotate(4deg);}100%{transform:none;}}
+@media (prefers-reduced-motion:reduce){ .bk-pg.turnF,.bk-pg.turnB{animation:bk-fade .3s forwards;} .bk-sp.nw,.bk-ear{animation:none;} }
+@keyframes bk-fade{to{opacity:0;}}
+`;
+  // the CSS goes in on the first open (inline / offline page = the online page at boot: same styles, same ids)
+  function css(){ if(css.done) return; css.done = 1; try{ GameParts.css('BooksCorner', CSS); }catch(e){ const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st); } }
+
+  const W = {en: {corner: 'Books Corner', back: '◀ Gameroom', backC: '◀ Books Corner', grown: 'Grown-ups', myself: '▶ Read it myself', toMe: '🔊 Read it to me', pages: n => n + ' pages', mins: '6–8 min',
+      hear: '👂 sounds', steam: '🔬 STEAM card', locked: ch => '🔒 Finish Chapter ' + ch + ' in 🧳 Avateer', lockedB: 'Then this book opens for the whole family!', ask: 'A grown-up can open every book for reading time (⚙️).',
+      soon: {paint: ['🎨 Being painted', 'The pictures for this book are being painted — soon!'], comics: ['💥 Coming soon', 'The 💥 Comics chat is drawing these pages.'], art: ['🎨 Coming soon', 'Art books are on the way.'], next: ['🔜 Coming soon', 'This book comes in a next round.']},
+      end: 'The End', again: '⭐ Read again', nextB: '▶ Next book', toot: 'pfrrt-TOOT!', thanks: 'Thank you for reading!', noVoice: '🔇 No Thai reading voice on this device — switch to EN, or read it yourself',
+      gTitle: '⚙️ For grown-ups', gText: 'Open every book now, for reading time (without finishing the chapter in Avateer).', gPin: 'Admin PIN', gOn: '📖 Open all', gOff: '🔒 Chapter locks', gBad: 'That PIN is not right', gOkOn: '📚 Every book is open now', gOkOff: '🔒 Books open by chapter again',
+      cardK: {steam: '🔬 STEAM card', feel: '💛 Feelings card', ask: '💬 For the grown-up to ask'}, page: 'page', of: 'of', newTag: 'NEW', gameTag: '🎮 game', lockCh: ch => 'Ch. ' + ch},
+    th: {corner: 'มุมหนังสือ', back: '◀ ห้องเกม', backC: '◀ มุมหนังสือ', grown: 'ผู้ใหญ่', myself: '▶ อ่านเอง', toMe: '🔊 อ่านให้ฟัง', pages: n => n + ' หน้า', mins: '6–8 นาที',
+      hear: '👂 เสียง', steam: '🔬 การ์ดสตีม', locked: ch => '🔒 เล่นบทที่ ' + ch + ' ใน 🧳 Avateer ให้จบ', lockedB: 'แล้วหนังสือเล่มนี้จะเปิดให้ทั้งบ้าน!', ask: 'ผู้ใหญ่เปิดทุกเล่มให้อ่านได้ (⚙️)',
+      soon: {paint: ['🎨 กำลังวาดภาพ', 'ภาพของเล่มนี้กำลังวาดอยู่ — อีกไม่นาน!'], comics: ['💥 อีกไม่นาน', 'แชต 💥 การ์ตูนกำลังวาดหน้านี้'], art: ['🎨 อีกไม่นาน', 'สมุดภาพศิลปะกำลังมา'], next: ['🔜 อีกไม่นาน', 'เล่มนี้จะมาในรอบต่อไป']},
+      end: 'จบแล้ว', again: '⭐ อ่านอีกครั้ง', nextB: '▶ เล่มต่อไป', toot: 'ปู๊ด-ตู๊ด!', thanks: 'ขอบคุณที่อ่านนะ!', noVoice: '🔇 เครื่องนี้ไม่มีเสียงอ่านภาษาไทย — เปลี่ยนเป็น EN หรืออ่านเองนะ',
+      gTitle: '⚙️ สำหรับผู้ใหญ่', gText: 'เปิดทุกเล่มให้อ่านตอนนี้เลย (ไม่ต้องเล่นบทใน Avateer ให้จบก่อน)', gPin: 'PIN ผู้ดูแล', gOn: '📖 เปิดทุกเล่ม', gOff: '🔒 เปิดตามบท', gBad: 'PIN ไม่ถูกต้อง', gOkOn: '📚 เปิดทุกเล่มแล้ว', gOkOff: '🔒 กลับไปเปิดตามบทแล้ว',
+      cardK: {steam: '🔬 การ์ดสตีม', feel: '💛 การ์ดความรู้สึก', ask: '💬 คำถามให้ผู้ใหญ่ถาม'}, page: 'หน้า', of: 'จาก', newTag: 'ใหม่', gameTag: '🎮 เกม', lockCh: ch => 'บทที่ ' + ch}};
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+  let root = null, VIEW = '', BOOK = null, DATA = null, PG = 0, AUTO = false, SPEAK = 0, BUSY = false, noteT = 0, sayT = 0, lastH = '';
+  const L = () => Books.lang(), w = () => W[L()];
+  const sound = n => { try{ UISound.play(n); }catch(e){} };
+  function tone(f, d, type, v){ try{ if(UISound.tone) UISound.tone(f, d, type, v); }catch(e){} }
+  function fx(kind){   // 👂 the page's own sound, made with UiKit's tone maker (no files)
+    if(kind === 'none') return;
+    if(kind === 'toot'){ tone(196, .12, 'sawtooth', .18); setTimeout(() => tone(330, .22, 'square', .14), 120); return; }
+    if(kind === 'bell'){ tone(988, .5, 'sine', .2); setTimeout(() => tone(1480, .45, 'sine', .1), 30); return; }
+    if(kind === 'chime'){ [660, 880, 1100].forEach((f, i) => setTimeout(() => tone(f, .25, 'sine', .14), i * 90)); return; }
+    if(kind === 'drum'){ tone(90, .3, 'sine', .3); setTimeout(() => tone(70, .3, 'sine', .22), 160); return; }
+    if(kind === 'echo'){ [0, 260, 520].forEach((t, i) => setTimeout(() => tone(520, .18, 'triangle', .14 / (i + 1)), t)); return; }
+    sound({pop: 'pop', whoosh: 'whoosh', drop: 'drop', bump: 'bump'}[kind] || 'pop');
+  }
+  // ---------- 🗣️ reading voice (the shared SPVoice picks EN; Thai needs a Thai voice on the device) ----------
+  function thVoice(){ try{ const vs = speechSynthesis.getVoices().filter(v => /^th/i.test(v.lang || '')); return vs.length ? (window.SPVoice ? SPVoice.pick(vs, 'th') : vs[0]) : null; }catch(e){ return null; } }
+  function stopVoice(){ SPEAK++; try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){} }
+  function say(text, done){
+    const my = ++SPEAK; let fired = false; const fin = () => { if(fired || my !== SPEAK) return; fired = true; done && done(); };
+    try{
+      if(!window.speechSynthesis || !text){ setTimeout(fin, 900); return; }
+      const u = new SpeechSynthesisUtterance(String(text).replace(/[“”"]/g, '')); u.rate = .9; u.pitch = 1.05;
+      if(L() === 'th'){ const v = thVoice(); if(!v){ toast(w().noVoice); AUTO = false; paintAuto(); return; } u.voice = v; u.lang = v.lang || 'th-TH'; } else u.lang = 'en-US';
+      u.onend = fin; u.onerror = fin; speechSynthesis.speak(u);
+      setTimeout(fin, 1400 + String(text).length * 95);   // a voice that never ends (some phones) still moves on
+    }catch(e){ setTimeout(fin, 900); }
+  }
+  function toast(t){ try{ UI.toast(t); }catch(e){} }
+  // ---------- the shell ----------
+  function build(){
+    if(root) return root;
+    css();
+    root = document.createElement('div'); root.className = 'bk-root hidden'; root.id = 'bk-root'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-label', 'Books Corner');
+    root.innerHTML = '<div class="bk-nook" aria-hidden="true"><i class="bk-beam"></i><i class="bk-win"></i><i class="bk-lamp"></i><i class="bk-rug"></i></div>' +
+      '<div class="bk-bar"><button class="sp-btn sp-back bk-back" data-sound="nav"></button><div class="bk-ttl"></div>' +
+      '<div class="bk-lang" role="group" aria-label="Language"><button data-l="en">EN</button><button data-l="th" class="th">ไทย</button></div>' +
+      '<button class="sp-btn sp-icon bk-auto hidden" data-sound="pop" aria-pressed="false" title="Read it to me">🔊</button>' +
+      '<button class="sp-btn sp-icon bk-gear" data-sound="pop" title="For grown-ups">⚙️</button></div>' +
+      '<div class="bk-main"></div><div class="bk-note" role="status"></div>' +
+      '<div class="bk-grown hidden"></div>';
+    document.body.appendChild(root);
+    root.querySelector('.bk-back').onclick = () => back();
+    root.querySelectorAll('.bk-lang button').forEach(b => b.onclick = () => { if(L() === b.dataset.l) return; Books.setLang(b.dataset.l); stopVoice(); paint(); try{ Books.strip(document.getElementById('books-strip')); }catch(e){} });
+    root.querySelector('.bk-auto').onclick = () => readAloud(!AUTO);
+    root.querySelector('.bk-gear').onclick = () => grown();
+    addEventListener('resize', () => { if(VIEW) fit(); });
+    addEventListener('keydown', e => { if(!VIEW) return; if(e.key === 'Escape'){ e.preventDefault(); back(); } else if(VIEW === 'read' && e.key === 'ArrowRight') next(); else if(VIEW === 'read' && e.key === 'ArrowLeft') prev(); });
+    addEventListener('popstate', () => { if(VIEW && !history.state?.bk) back(true); });
+    return root;
+  }
+  function bar(){
+    const b = root.querySelector('.bk-back'), t = root.querySelector('.bk-ttl'), x = w();
+    b.textContent = VIEW === 'shelf' ? x.back : x.backC;
+    if(VIEW === 'shelf') t.innerHTML = '📚 ' + esc(x.corner);
+    else t.innerHTML = '<span class="bk-tt">' + esc(L() === 'th' ? BOOK.th : BOOK.en) + '</span><small>' + esc(BOOK.isle + ' ' + (L() === 'th' ? BOOK.isleTh : BOOK.isleEn)) + '</small>';
+    root.dataset.lang = L();
+    root.querySelectorAll('.bk-lang button').forEach(q => q.classList.toggle('on', q.dataset.l === L()));
+    root.querySelector('.bk-auto').classList.toggle('hidden', VIEW !== 'read');
+    root.querySelector('.bk-gear').classList.toggle('hidden', VIEW !== 'shelf');
+    root.querySelector('.bk-gear').title = x.grown;
+    paintAuto();
+  }
+  function paintAuto(){ const a = root && root.querySelector('.bk-auto'); if(!a) return; a.classList.toggle('on', AUTO); a.setAttribute('aria-pressed', AUTO ? 'true' : 'false'); a.classList.toggle('sp-go', AUTO); }
+  function note(title, text){ const n = root.querySelector('.bk-note'); n.innerHTML = '<b>' + esc(title) + '</b>' + esc(text); n.classList.add('on'); clearTimeout(noteT); noteT = setTimeout(() => n.classList.remove('on'), 3600); }
+  function paint(){ if(!root) return; bar(); if(VIEW === 'shelf') shelf(); else if(VIEW === 'cover') cover(); else if(VIEW === 'read') reader(true); }
+  // ---------- 🪵 the shelf: one plank per shelf type, in Aowu's order ----------
+  function shelf(){
+    const m = root.querySelector('.bk-main'), x = w(), nw = Books.newIds();
+    m.innerHTML = '<div class="bk-shelf">' + Books.SHELVES.map(s => {
+      const books = Books.LIST.filter(b => b.shelf === s.id);
+      return '<section class="bk-plank" data-shelf="' + s.id + '"><h3><i>' + s.icon + '</i><span' + (L() === 'th' ? ' class="th"' : '') + '>' + esc(L() === 'th' ? s.th : s.en) + '</span></h3><div class="bk-row">' +
+        books.map((b, i) => { const open = Books.isOpen(b.id), cls = b.game ? 'o g' : open ? 'o' + (nw.indexOf(b.id) >= 0 ? ' nw' : '') : b.ready ? 'l' : 's';
+          const lean = i === books.length - 1 && books.length > 1 && !b.ready && !b.game ? ' lean' : '';
+          return '<button class="bk-sp ' + cls + lean + '" data-id="' + b.id + '" data-sound="pop" style="--c1:' + b.c1 + ';--c2:' + b.c2 + '" aria-label="' + esc(L() === 'th' ? b.th : b.en) + '">' +
+            (cls.indexOf('nw') >= 0 ? '<span class="tag">✨ ' + x.newTag + '</span>' : '') + (b.game ? '<span class="tag">' + x.gameTag + '</span>' : '') +
+            '<span class="se">' + b.isle + '</span><span class="sl' + (L() === 'th' ? ' th' : '') + '" data-long="' + esc(L() === 'th' ? b.th : b.en) + '" data-short="' + esc(L() === 'th' ? b.sTh : b.sEn) + '"></span>' +
+            (cls === 'l' ? '<span class="lk">🔒</span><span class="sn">' + esc(x.lockCh(b.ch)) + '</span>' : '') + (cls === 's' ? '<span class="soon">🔜</span>' : '') + '</button>'; }).join('') +
+        '</div><div class="bk-board"></div></section>'; }).join('') + '</div>';
+    m.querySelectorAll('.bk-sp').forEach(el => el.onclick = () => tapSpine(el.dataset.id));
+    fit();
+  }
+  function tapSpine(id){
+    const b = Books.byId(id), x = w(); if(!b) return;
+    if(b.game){ try{ UI.go(WEBAPP_URL + '?page=' + b.game + (typeof sessionQueryString === 'function' ? sessionQueryString() : ''), b.game, L() === 'th' ? b.gameTh : 'Opening ' + b.en); }catch(e){} return; }
+    if(!b.ready){ const s = x.soon[b.soon] || x.soon.next; note(s[0], s[1]); return; }
+    if(!Books.isOpen(id)){ sound('bump'); note(x.locked(b.ch), x.lockedB + ' ' + x.ask); return; }
+    openBook(id);
+  }
+  function openBook(id, then){
+    const b = Books.byId(id); if(!b || BUSY) return; BUSY = true;
+    try{ UI.loading('book', (L() === 'th' ? 'กำลังเปิด ' + b.th : 'Opening ' + b.en)); }catch(e){}
+    GameParts.need('Book_' + id, ok => {
+      BUSY = false; try{ UI.loaded(); }catch(e){}
+      const d = window.BOOKS_DATA && BOOKS_DATA[id];
+      if(!ok || !d){ sound('error'); toast('📖 The book did not load — check the internet, then tap it again'); return; }
+      BOOK = b; DATA = d; PG = 0; Books.seen(id);
+      if(then) return then();
+      show('cover');
+    });
+  }
+  // ---------- 📖 the cover ----------
+  function cover(){
+    const m = root.querySelector('.bk-main'), x = w(), b = BOOK, p1 = DATA.pages[0];
+    m.innerHTML = '<div class="bk-cov"><div class="bk-book" style="--c1:' + b.c1 + ';--c2:' + b.c2 + '"><span class="bn">📖 ' + b.ch + '</span><span class="bs">' + b.isle + '</span>' +
+      '<div class="bp"><svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">' + p1.pic + '</svg></div><div class="bt' + (L() === 'th' ? ' th' : '') + '">' + esc(L() === 'th' ? b.th : b.en) + '</div></div>' +
+      '<div class="bk-info"><h2' + (L() === 'th' ? ' class="th"' : '') + '>' + esc(L() === 'th' ? b.th : b.en) + '</h2><div class="sub">' + esc(b.isle + ' ' + (L() === 'th' ? b.isleTh : b.isleEn)) + '</div>' +
+      '<div class="bk-chips"><span>📄 ' + esc(x.pages(DATA.pages.length)) + '</span><span>⏱️ ' + esc(x.mins) + '</span><span>' + esc(x.hear) + '</span><span>' + esc(x.steam) + '</span></div>' +
+      '<div class="bk-go"><button class="sp-btn sp-go bk-me" data-sound="pop">' + esc(x.myself) + '</button><button class="sp-btn sp-second bk-tome" data-sound="pop">' + esc(x.toMe) + '</button></div></div></div>';
+    m.querySelector('.bk-me').onclick = () => { AUTO = false; PG = 0; show('read'); };
+    m.querySelector('.bk-tome').onclick = () => { PG = 0; show('read'); readAloud(true); };
+    fit();
+  }
+  // ---------- 📄 the reader ----------
+  const PAGES = () => DATA ? DATA.pages.length + DATA.back.length + 1 : 0;   // story pages · back pages · The End
+  function cardKind(k){ return /🔬/.test(k) ? 'steam' : /💛/.test(k) ? 'feel' : 'ask'; }
+  function pageHtml(i){
+    const x = w(), np = DATA.pages.length, nb = DATA.back.length, th = L() === 'th';
+    if(i < np){ const p = DATA.pages[i], lines = th ? p.th : p.en;
+      return '<div class="bk-pic"><svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + esc((p.en || []).join(' ')) + '">' + p.pic + '</svg>' +
+        (p.key ? '<span class="bk-key">⭐</span>' : '') + (p.hear ? '<button class="bk-ear" data-sound="none" aria-label="Hear it">👂</button><span class="bk-say"></span>' : '') + '<i class="bk-shim"></i></div>' +
+        '<div class="bk-words">' + lines.map((t, j) => '<p class="bk-ln" data-j="' + j + '">' + esc(t) + '</p>').join('') + '</div>'; }
+    if(i < np + nb){ const c = DATA.back[i - np], k = cardKind(c.k), t = th ? c.th : c.en;
+      return '<div class="bk-card" style="grid-row:1 / -1;grid-column:1 / -1"><div class="ci">' + ({steam: '🔬', feel: '💛', ask: '💬'}[k]) + '</div><div class="ck">' + esc(x.cardK[k]) + '</div><h3 class="bk-ln" data-j="0">' + esc(t[0]) + '</h3><p class="bk-ln" data-j="1">' + esc(t[1]) + '</p></div>'; }
+    const nxt = nextOpen();
+    return '<div class="bk-card bk-end" style="grid-row:1 / -1;grid-column:1 / -1"><div class="ci">🐘</div><div class="bk-toot">' + esc(x.toot) + '</div><h3>' + esc(x.end) + '</h3><div class="ck">' + esc(x.thanks) + '</div>' +
+      '<div class="bk-go"><button class="sp-btn sp-second bk-again" data-sound="pop">' + esc(x.again) + '</button>' + (nxt ? '<button class="sp-btn sp-go bk-next" data-sound="pop">' + esc(x.nextB) + '</button>' : '') + '</div></div>';
+  }
+  function nextOpen(){ const story = Books.LIST.filter(b => b.shelf === BOOK.shelf), i = story.indexOf(BOOK); for(let j = i + 1; j < story.length; j++) if(Books.isOpen(story[j].id)) return story[j]; return null; }
+  function dots(){ const np = DATA.pages.length, nb = DATA.back.length;
+    let h = ''; for(let i = 0; i < np + nb; i++) h += '<i class="' + (i < np ? (DATA.pages[i].key ? 'k' : '') : 'b') + (i === PG ? ' on' : '') + '"></i>'; return h; }
+  function reader(fresh){
+    const m = root.querySelector('.bk-main');
+    if(fresh || !m.querySelector('.bk-rd')){
+      m.innerHTML = '<div class="bk-rd"><div class="bk-stage"></div><div class="bk-nav"><button class="sp-btn sp-icon bk-prev" data-sound="none" aria-label="Back a page">‹</button><div class="bk-dots"></div><button class="sp-btn sp-icon bk-nxt" data-sound="none" aria-label="Next page">›</button></div></div>';
+      m.querySelector('.bk-prev').onclick = () => prev(); m.querySelector('.bk-nxt').onclick = () => next();
+      const st = m.querySelector('.bk-stage'); let sx = null, sy = 0;
+      st.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; });
+      st.addEventListener('pointerup', e => { if(sx == null) return; const dx = e.clientX - sx, dy = e.clientY - sy; sx = null; if(Math.abs(dx) > 46 && Math.abs(dx) > Math.abs(dy) * 1.4){ dx < 0 ? next() : prev(); } });
+      st.innerHTML = '<div class="bk-pg cur">' + pageHtml(PG) + '</div>';
+    }
+    wirePage(m.querySelector('.bk-pg.cur')); navState(); fit();
+  }
+  function navState(){ const m = root.querySelector('.bk-main'); if(!m) return; const d = m.querySelector('.bk-dots'); if(d) d.innerHTML = dots();
+    const p = m.querySelector('.bk-prev'), n = m.querySelector('.bk-nxt'); if(p) p.disabled = PG <= 0; if(n) n.disabled = PG >= PAGES() - 1; }
+  function wirePage(pg){
+    if(!pg) return;
+    const ear = pg.querySelector('.bk-ear'); if(ear) ear.onclick = e => { e.stopPropagation(); hear(); };
+    const a = pg.querySelector('.bk-again'); if(a) a.onclick = () => { stopVoice(); turnTo(0); };
+    const n = pg.querySelector('.bk-next'); if(n) n.onclick = () => { const b = nextOpen(); if(b){ stopVoice(); openBook(b.id); } };
+    if(PG === PAGES() - 1){ setTimeout(() => fx('toot'), 260); }
+  }
+  function hear(){
+    const p = DATA && DATA.pages[PG]; if(!p || !p.hear) return; const pg = root.querySelector('.bk-pg.cur'), s = pg && pg.querySelector('.bk-say'); if(!s) return;
+    const silent = p.hear.w === '…'; s.textContent = silent ? (L() === 'th' ? '…(เงียบกริบ)…' : '…(no sound)…') : p.hear.w; s.classList.add('on');
+    clearTimeout(sayT); sayT = setTimeout(() => s.classList.remove('on'), 1800); fx(p.hear.s);
+    if(!silent && L() === 'en'){ try{ if(window.speechSynthesis && !AUTO){ const u = new SpeechSynthesisUtterance(p.hear.w); u.rate = 1; u.pitch = 1.2; u.lang = 'en-US'; speechSynthesis.speak(u); } }catch(e){} }
+  }
+  function turnTo(i, dir){
+    i = Math.max(0, Math.min(PAGES() - 1, i)); if(i === PG || BUSY) return;
+    const st = root.querySelector('.bk-stage'); if(!st) return;
+    const fwd = dir != null ? dir > 0 : i > PG, cur = st.querySelector('.bk-pg.cur');
+    BUSY = true; stopVoice();
+    const nx = document.createElement('div'); nx.className = 'bk-pg'; PG = i; nx.innerHTML = pageHtml(i);
+    st.insertBefore(nx, cur); sound('whoosh');
+    cur.classList.remove('cur'); cur.classList.add(fwd ? 'turnF' : 'turnB');
+    const done = () => { if(cur.parentNode) cur.remove(); nx.classList.add('cur', 'land'); if(i < DATA.pages.length && DATA.pages[i].key) nx.classList.add('gold'); BUSY = false; wirePage(nx); navState(); fit();
+      if(AUTO) setTimeout(readPage, 380); };
+    let t = setTimeout(done, 680); cur.addEventListener('animationend', () => { clearTimeout(t); done(); }, {once: true});
+    navState();
+  }
+  const next = () => turnTo(PG + 1, 1), prev = () => turnTo(PG - 1, -1);
+  function readAloud(on){ AUTO = !!on; paintAuto(); stopVoice(); clearLit(); if(AUTO && VIEW === 'read') readPage(); }
+  function clearLit(){ root && root.querySelectorAll('.bk-ln.on').forEach(l => l.classList.remove('on')); }
+  function readPage(){
+    if(!AUTO || VIEW !== 'read') return; const pg = root.querySelector('.bk-pg.cur'); if(!pg) return;
+    const lines = [...pg.querySelectorAll('.bk-ln')]; if(!lines.length){ AUTO = false; paintAuto(); return; }   // The End: stop
+    let j = 0; const my = SPEAK;
+    const step = () => { if(!AUTO || VIEW !== 'read') return; clearLit(); if(j >= lines.length){ if(PG < PAGES() - 1) setTimeout(() => { if(AUTO && VIEW === 'read') next(); }, 900); else { AUTO = false; paintAuto(); } return; }
+      const l = lines[j++]; l.classList.add('on'); say(l.textContent, step); };
+    if(PG < DATA.pages.length && DATA.pages[PG].hear && DATA.pages[PG].hear.w !== '…' && PG > 0) fx(DATA.pages[PG].hear.s);
+    step();
+  }
+  // ---------- 📏 sizes: everything fits the screen, nothing scrolls ----------
+  function fit(){
+    if(!root || !VIEW) return;
+    const m = root.querySelector('.bk-main'), bw = m.clientWidth, bh = m.clientHeight;
+    if(VIEW === 'shelf'){
+      const sh = m.querySelector('.bk-shelf'); if(!sh) return;
+      const cols = bw >= 700 ? (bh < 470 ? 3 : 2) : (bw > bh ? 3 : 1), rows = Math.ceil(6 / cols);
+      sh.style.setProperty('--cols', cols); sh.style.setProperty('--rows', rows);
+      sh.querySelectorAll('.bk-plank').forEach(pl => {
+        const row = pl.querySelector('.bk-row'), n = row.children.length, rw = row.clientWidth - 12, rh = row.clientHeight;
+        const sw = Math.max(26, Math.min(Math.floor((rw - (n - 1) * 8) / Math.max(n, 6)), Math.floor(rh * 0.34), 64));
+        row.style.setProperty('--sw', sw + 'px'); row.style.setProperty('--sf', Math.max(10, Math.min(17, Math.round(sw * 0.36))) + 'px');
+        row.querySelectorAll('.bk-sp').forEach((sp, i) => { sp.style.setProperty('--sh', Math.round(82 + ((i * 37) % 3) * 5) + '%');
+          const sl = sp.querySelector('.sl'); if(!sl) return; const room = rh * 0.86 * 0.62;
+          sl.textContent = sl.dataset.long; if(sl.scrollHeight > room || sw < 34) sl.textContent = sl.dataset.short; });
+      });
+    } else if(VIEW === 'cover'){
+      const cv = m.querySelector('.bk-cov'), side = bw > bh * 1.05 || bw >= 640;
+      cv.style.flexDirection = side ? 'row' : 'column';
+      const info = cv.querySelector('.bk-info'), ih = side ? 0 : (info ? info.scrollHeight : 0);
+      const wBook = side ? Math.min(bw * 0.42, (bh - 24) * 0.75, 380) : Math.min(bw * 0.62, Math.max(120, (bh - ih - 30) * 0.75), 300);
+      cv.querySelector('.bk-book').style.setProperty('--bw', Math.max(110, Math.floor(wBook)) + 'px');
+    } else if(VIEW === 'read'){
+      const rd = m.querySelector('.bk-rd'), nav = m.querySelector('.bk-nav'), stg = m.querySelector('.bk-stage');
+      const H = bh - (nav ? nav.offsetHeight : 52) - 10, Wd = bw - 4;
+      const side = H < 560 && Wd > H * 1.6;                         // phone sideways (short + wide): picture left, words right
+      root.classList.toggle('side', side);
+      const fs = Math.round(Math.max(16, Math.min(side ? 19 : 24, side ? Wd * 0.024 : (Wd < 600 ? Wd * 0.05 : Math.min(Wd, 900) * 0.028))));   // phones upright: bigger words (lots of room under the picture)
+      let pw, ph, pich, picw;
+      if(side){ ph = H; picw = Math.min(Math.floor(ph * 1.5), Math.floor(Wd * 0.62)); pw = Math.min(Wd, picw + Math.max(220, Math.floor(Wd * 0.34))); pich = ph; }
+      else { const textH = Math.round(fs * (L() === 'th' ? 1.42 : 1.32) * 3.2 + 26); pw = Math.min(Wd, Math.floor((H - textH) * 1.5), 1100); pich = Math.floor(pw / 1.5); ph = Math.min(H, pich + textH); picw = pw; }
+      [rd, stg].forEach(e => e && e.style.setProperty('--pw', pw + 'px'));
+      stg.style.setProperty('--ph', ph + 'px'); stg.style.setProperty('--pich', pich + 'px'); stg.style.setProperty('--picw', picw + 'px'); stg.style.setProperty('--fs', fs + 'px');
+      if(nav) nav.style.maxWidth = pw + 'px';
+      // words that would still overflow → step the font down (never scroll)
+      stg.querySelectorAll('.bk-pg').forEach(pg => { const wd = pg.querySelector('.bk-words'); if(!wd) return; let f = fs; pg.style.removeProperty('--fs'); for(let k = 0; k < 8 && wd.scrollHeight > wd.clientHeight + 1 && f > 13; k++){ f -= 1; pg.style.setProperty('--fs', f + 'px'); } });
+    }
+  }
+  // ---------- ⚙️ the grown-up switch (Admin PIN) ----------
+  function grown(){
+    const g = root.querySelector('.bk-grown'), x = w(), all = Books.S.all;
+    if(!g.classList.contains('hidden')){ g.classList.add('hidden'); return; }
+    g.innerHTML = '<b>' + esc(x.gTitle) + '</b><small>' + esc(x.gText) + '</small><div class="row"><input type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="' + esc(x.gPin) + '" aria-label="' + esc(x.gPin) + '">' +
+      '<button class="sp-btn ' + (all ? 'sp-second' : 'sp-go') + ' bk-gset" data-sound="pop">' + esc(all ? x.gOff : x.gOn) + '</button></div>';
+    g.classList.remove('hidden'); const inp = g.querySelector('input'); setTimeout(() => { try{ inp.focus(); }catch(e){} }, 60);
+    const go = () => { const btn = g.querySelector('.bk-gset'), pin = inp.value.trim(); if(!pin){ inp.focus(); return; }
+      try{ UI.busy(btn, 'pin', x.gPin); }catch(e){}
+      google.script.run.withSuccessHandler(r => { try{ UI.idle(btn); }catch(e){}
+          if(!r || !r.ok){ sound('error'); inp.value = ''; toast(x.gBad); return; }
+          Books.S.all = !!r.all; g.classList.add('hidden'); sound('unlock'); toast(r.all ? x.gOkOn : x.gOkOff); shelf(); try{ Books.strip(document.getElementById('books-strip')); }catch(e){} })
+        .withFailureHandler(() => { try{ UI.idle(btn); }catch(e){} sound('error'); toast('⚠️ Not saved — check the internet and try again'); })
+        .setBooksAll(pin, !all); };
+    g.querySelector('.bk-gset').onclick = go; inp.addEventListener('keydown', e => { if(e.key === 'Enter') go(); });
+  }
+  // ---------- views ----------
+  function show(v){ VIEW = v; root.dataset.view = v; document.documentElement.classList.toggle('bk-reading', v === 'read'); try{ root.querySelector('.bk-note').classList.remove('on'); }catch(e){} root.classList.remove('hidden'); root.classList.remove('side'); root.querySelector('.bk-grown').classList.add('hidden'); if(v !== 'read'){ AUTO = false; stopVoice(); } bar(); paint(); }
+  function back(fromHistory){
+    if(VIEW === 'read' || VIEW === 'cover'){ stopVoice(); AUTO = false; show(VIEW === 'read' ? 'cover' : 'shelf'); if(VIEW === 'shelf' && !fromHistory){} return; }
+    close(fromHistory);
+  }
+  function open(at){
+    build(); document.documentElement.classList.add('bk-open');
+    try{ if(!history.state || !history.state.bk) history.pushState({bk: 1}, ''); }catch(e){}
+    show('shelf');
+    if(at && Books.isOpen(at)) openBook(at);
+  }
+  function close(fromHistory){
+    stopVoice(); AUTO = false; VIEW = ''; if(root) root.classList.add('hidden'); document.documentElement.classList.remove('bk-open', 'bk-reading');
+    try{ if(!fromHistory && history.state && history.state.bk) history.back(); }catch(e){}
+    try{ Books.strip(document.getElementById('books-strip')); }catch(e){}
+  }
+window.BooksCorner = {open, close, back, next, prev, hear, readAloud, go: i => turnTo(i), view: () => VIEW, page: () => PG, pages: () => PAGES(), book: () => BOOK && BOOK.id, fit, version: ROUND};
+  if(window.GameParts) GameParts.loaded('BooksCorner', ROUND);
+})();
