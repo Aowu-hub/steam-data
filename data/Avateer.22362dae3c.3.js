@@ -10,7 +10,8 @@ const SAVE_KEY = 'sp_avateer_s1:' + (CURRENT_PLAYER || 'guest'), AK = 0.62 * 1.5
 const calm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 /* 🌐 page words (StoryKit has its own) — ONE language at a time */
 const WORDS = {
-  en: {load: 'Packing for Elephant Jungle…', loadW: 'Building the islets…', loadT: 'Learning the island\'s stories…', jump: 'Jump', emote: 'Emote', swing: 'Swing',
+  en: {act: 'Act', a_talk: 'Talk', a_quest: 'Quest', a_handin: 'Hand in', a_shop: 'Shop', a_rest: 'Rest', a_open: 'Open', a_look: 'Look', a_pet: 'Pet', a_pud: 'Ask', a_call: 'Call', a_give: 'Give', a_shake: 'Shake', a_knock: 'Knock', a_forge: 'Forge', a_board: 'Board', a_go: 'Go', nothing: '✋ Nothing to do here — walk up to someone or something', fightHere: '⚔️ Tap Fight!', mobName: 'Mangobble',
+    load: 'Packing for Elephant Jungle…', loadW: 'Building the islets…', loadT: 'Learning the island\'s stories…', jump: 'Jump', emote: 'Emote', swing: 'Swing',
     nameH: 'Name your traveller', nameP: 'Up to 10 letters — Grandma Noi will call you this!', nameGo: '✅ Let\'s go!', nameBad: 'Try another name 🙂',
     hop: '🦘 Hop over the puddles', hopStone: '🦘 Hop the stones', tapJump: 'Tap 🦘 to hop!', wave: '👋 Wave to Grandma Noi', talkNoi: '💬 Talk to Grandma Noi', inn: '🚶 Go to the inn',
     mango: '🥭 Follow the sand bar to Mango Grove', saved: '💾 Your journey is saved!', soon: '⚔️ Battles come next — soon!', soonGap: '🌉 The bridge to the camps opens soon!',
@@ -20,7 +21,8 @@ const WORDS = {
     swap2: '⇄ Swap weapons + beat 2 Mangobbles', toStream: '🚶 Follow Pudding to the stream', tame1: '🐾 Befriend a Mangobble (🍖 treat first!)', backNoi: '💬 Go back to Grandma Noi', duel: '🧭 Tara wants a pet duel!',
     newW: '🗡️ New weapon! Tap ⇄ in a battle to swap.', lv: 'Lv', lvup: '⭐ Level up! Lv', treats: '🍖 Treats', petHome: '🏠 Your new friend lives in the pet house', moreMobs: '⚔️ More Mangobbles!',
     trySwap: '⇄ Use the swap this time — Grandma is watching!', soonCamps: '🌉 The camps are getting ready — come back soon!', skip: '⏩ tap to skip', quiet: '🍃 The grove is quiet for a bit…', rollAway: 'pfrrt-TOOT! It rolled away!', rare: '✨ Rare!', elite: '⭐ Elite!', crow: 'Ko-ke-kokoo!', pinch: 'Pinch-pinch! Sorry!', fight: 'Fight', gentle: '🕊️ Be gentle — walk slowly into its circle!'},
-  th: {load: 'กำลังเก็บกระเป๋าไปป่าช้าง…', loadW: 'กำลังสร้างเกาะ…', loadT: 'กำลังเรียนรู้เรื่องราวของเกาะ…', jump: 'กระโดด', emote: 'ท่าทาง', swing: 'ฟัน',
+  th: {act: 'ทำ', a_talk: 'คุย', a_quest: 'เควสต์', a_handin: 'ส่งงาน', a_shop: 'ร้าน', a_rest: 'พัก', a_open: 'เปิด', a_look: 'ดู', a_pet: 'ลูบ', a_pud: 'ขอช่วย', a_call: 'เรียก', a_give: 'ให้', a_shake: 'เขย่า', a_knock: 'เคาะ', a_forge: 'ตีเหล็ก', a_board: 'บอร์ด', a_go: 'ไป', nothing: '✋ ตรงนี้ไม่มีอะไรให้ทำ — เดินไปใกล้ ๆ คนหรือสิ่งของ', fightHere: '⚔️ แตะ สู้!', mobName: 'แมงโกบเบิล',
+    load: 'กำลังเก็บกระเป๋าไปป่าช้าง…', loadW: 'กำลังสร้างเกาะ…', loadT: 'กำลังเรียนรู้เรื่องราวของเกาะ…', jump: 'กระโดด', emote: 'ท่าทาง', swing: 'ฟัน',
     nameH: 'ตั้งชื่อนักเดินทาง', nameP: 'ไม่เกิน 10 ตัวอักษร — ยายน้อยจะเรียกเธอแบบนี้!', nameGo: '✅ ไปกันเลย!', nameBad: 'ลองชื่ออื่นนะ 🙂',
     hop: '🦘 กระโดดข้ามแอ่งน้ำ', hopStone: '🦘 กระโดดข้ามก้อนหิน', tapJump: 'แตะ 🦘 เพื่อกระโดด!', wave: '👋 โบกมือให้ยายน้อย', talkNoi: '💬 คุยกับยายน้อย', inn: '🚶 ไปที่โรงเตี๊ยม',
     mango: '🥭 เดินตามสันทรายไปสวนมะม่วง', saved: '💾 บันทึกการเดินทางแล้ว!', soon: '⚔️ การต่อสู้มาเร็ว ๆ นี้!', soonGap: '🌉 สะพานไปค่ายเปิดเร็ว ๆ นี้!',
@@ -46,7 +48,7 @@ function metaOf(s){ return {title: '🇹🇭 Elephant Jungle', chapter: G.lang =
 function migrate(){ try { if(!localStorage.getItem(FK(1))){ const o = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if(o && o.v === 1) localStorage.setItem(FK(1), JSON.stringify({meta: {title: '🇹🇭 Elephant Jungle', chapter: 'Ch. 1', level: 'Lv ' + (o.lv || 1), name: o.name, playSec: o.playSec || 0}, data: o, at: o.at || 1})); } } catch(e){} }
 function peekLang(){ for(let k = 1; k <= 3; k++){ try { const f = JSON.parse(localStorage.getItem(FK(k)) || 'null'); if(f && f.data && f.data.lang) return f.data.lang; } catch(e){} } return null; }
 function blank(){ return {v: 1, name: '', lang: (navigator.language || '').toLowerCase().indexOf('th') === 0 ? 'th' : 'en', pos: null, story: null, flags: {}, moves: ['jump'], at: 0, playSec: 0,
-  lv: 1, xp: 0, coins: 0, job: null, pet: null, help: 'guide', look: 'me', lk: {}, sets: null, set: 0, pets: [], treats: 0, petName: '', yard: [], snacks: {}}; }   /* 🐾 av-pet1: your pet's name · the yard · favourite snacks */   /* av-s1b: 🧑 creation + ⭐ level + 🐾 pets */
+  lv: 1, xp: 0, coins: 0, job: null, pet: null, help: 'guide', look: 'me', lk: {}, sets: null, set: 0, pets: [], treats: 0, petName: '', yard: [], snacks: {}, pudHome: false}; }   /* 🐾 av-pet2: 🏠 Pudding stays home (the 🎒 switch) */   /* 🐾 av-pet1: your pet's name · the yard · favourite snacks */   /* av-s1b: 🧑 creation + ⭐ level + 🐾 pets */
 function loadLocal(slot){ try { const f = JSON.parse(localStorage.getItem(FK(slot || G.slot || 1)) || 'null'), s = f && f.data; if(s && s.v === 1) return Object.assign(blank(), s); } catch(e){} return null; }
 function snapshot(){ const s = G.save; s.lang = G.lang; s.flags = G.flags; s.playSec = Math.round(G.playSec); if(G.H) s.pos = {x: +G.H.x.toFixed(2), y: +G.H.y.toFixed(2)}; if(G.ST) s.story = G.ST.toJSON(); s.at = Date.now(); return s; }
 function saveLocal(){ if(!G.save) return; try { const s = snapshot(); localStorage.setItem(FK(G.slot || 1), JSON.stringify({meta: metaOf(s), data: s, at: s.at})); localStorage.setItem(LAST_KEY, String(G.slot || 1)); } catch(e){} }
@@ -105,7 +107,8 @@ async function boot(){ const lb = (p, txt) => { $('load-bar').style.width = Math
   const I = AvWorld.ISL.il1; await Props.need(I.needs || []); lb(0.25, w('loadT'));
   await AvWorld.need('story_il1'); lb(0.4, w('loadW'));
   G.W = AvWorld.build('il1', {moves: ['jump']}); lb(0.55);   /* av-s1c: the world first (the same for every file) → 🎬 cover → the file */
-  G.V = Iso.view($('iso'), G.W.M, {bg: 'none', shadow: true, min: 0.45, max: 2.6, pad: {t: 70, b: 40}, dprCap: phoneCap()}); G.V.resize();
+  G.vo = {bg: 'none', shadow: true, min: 0.45, max: 2.6, pad: {t: 70, b: 40}, dprCap: phoneCap()}; G.V = Iso.view($('iso'), G.W.M, G.vo); G.V.resize();
+  addEventListener('resize', () => { const c = phoneCap(); if(c !== G.vo.dprCap){ G.vo.dprCap = c; G.V.resize(); } });   /* 🐢 av-int1: the cap follows the window size */
   { const tall = G.V.H > G.V.W * 1.2, d = G.V.dpr || 1; G.V.zoom = Iso.stepFor((tall ? 1 : G.V.W > 1000 ? 1.5 : 1) * d) / d; }   /* the baked zoom step (the cover shot + the game use it) */
   { const pics0 = G.W.items.map(p => p.pic).filter(Boolean); await Iso.warm(pics0, G.V, {onProgress: f => lb(0.55 + f * 0.4)}); }
   $('loading').style.opacity = 0; setTimeout(() => $('loading').classList.add('hidden'), 350);   /* the cover comes next */
@@ -165,34 +168,39 @@ function intro(){ G.intro = true; G.flags['seen.isle.landing'] = 1;   /* the boa
 /* ---------- 🛶 av-boat: the first arrival — you ROW the little boat in out of the clouds (plan: slice plan §⟳🛶 av-turn1p B, Aowu 2026-11-28 "go") ----------
    ☁️ glide out of a cloud at the bay's open rim → 🛶 splash-down + row → 🐘 the reveal (the sleeping temple elephant + the Landing card) → 🪢 bonk at the dock
    (Noi hurries down, Pudding peeking) → 🦘 hop out, Pudding toots, Noi waves → her first line. ≈ 7 s · story lock (HUD hidden) · ⏩ tap = skip · once per file.
-   Stand-ins until 🌳 IsoProps answers (📨 av-turn1p): the dock shows `dock_empty` while the boat is away (a game-side copy of IsoProps' dock without its boat)
-   and the rowing boat is drawn here (same hull as the dock's boat). It moors exactly where the dock draws its own boat, so the swap back is seamless. */
+   🛶 av-boat2 (ip-14 LIVE): the boat + the dock are IsoProps' own pieces now — the village dock goes Props.setState 'empty' while you are away, the 🛶 `rowboat`
+   rows the curve with Props.rowboat.at (nearest of 16 ways, its own oar frames, bob, bow wave) and Props.rowboat.rider paints you IN it; at the bonk it ties up
+   at Props.rowboat.berth(dock) ('moored'), and when you hop out it is dropped and the dock goes back to 'moored' (the same hull at the same berth = seamless).
+   The scene keeps its own ☁️ clouds, splash-down + bonk splashes, the long wake V, the 🪢 rope and the ⭐ bonk star (arrUnder / arrOver). */
 const ARR_T = [1.3, 1.7, 2.1, 1.4, 0.9];   // ☁️ glide · 🛶 row · 🐘 reveal · 🪢 bonk · 🦘 hop (s)
 function arrive(done){
-  const d = G.W.items.find(it => it.prop === 'dock'), st = G.W.spot('start'), mk = G.W.marks && G.W.marks.landing, noi = G.people.find(p => p.id === 'noi');
-  if(calm || !d || !st || !noi || !window.Props || !Props.turner || !Props.DEFS.dock) return false;
-  if(!Props.DEFS.dock_empty){ const D = Props.DEFS.dock; Props.add('village', 'dock_empty', Object.assign({}, D, {key: 'dock_empty', name: 'Dock (boat away)', build: (B, v) => { const B2 = Object.create(B); B2.custom = () => {}; D.build(B2, v); }})); }
-  let empty = null; try { empty = Props.item('dock_empty', d.x, d.y, {turn: d.turn, v: d.v, z: d.z, look: d.look}); } catch(e){ return false; }
-  const T = Props.turner(2, 2, d.turn), c = T.pt(1.025, 1.45), ax = T.nrm(1, 0), P1 = {x: d.x + c[0], y: d.y + c[1]};   // where the dock draws its own boat
-  const head = Math.atan2(ax[1], ax[0]);
-  // ☁️ start just past the bay's open rim, in the sky (the island floats): 10 tiles out along the dock's sea side, a soft curve in
-  const sea = G.W.spot('boat') || P1;
+  const d = G.W.items.find(it => it.prop === 'dock'), st = G.W.spot('start'), mk = G.W.marks && G.W.marks.landing, noi = G.people.find(p => p.id === 'noi'), R = window.Props && Props.rowboat;
+  if(calm || !d || !st || !noi || !R || !Props.DEFS.rowboat || !(Props.DEFS.dock.states || []).includes('empty')) return false;
+  const B = R.berth(d), P1 = {x: B.x, y: B.y};   // where the dock ties its boat (hull middle + heading)
+  let boat = null; try { boat = Props.item('rowboat', P1.x - 0.5, P1.y - 0.5, {v: d.v, state: 'rowing', z: d.z || 0}); } catch(e){ return false; }
+  // ☁️ start just past the bay's open rim, in the sky (the island floats)
   const P0 = {x: P1.x + 10.35, y: P1.y - 3.4}, C = {x: P1.x + 1.05, y: P1.y + 3.5};   /* 🔧 av-fix1: in from the RIGHT, sideways along the rim (broadside on screen), then a turn into the dock — never bow-on */
   const at = u => ({x: (1 - u) * (1 - u) * P0.x + 2 * (1 - u) * u * C.x + u * u * P1.x, y: (1 - u) * (1 - u) * P0.y + 2 * (1 - u) * u * C.y + u * u * P1.y});
   let wet = 0.42; for(let u = 0.05; u < 0.95; u += 0.01){ const q = at(u), cell = G.W.M.get(Math.floor(q.x), Math.floor(q.y)); if(cell && cell.t === 'water'){ wet = u + 0.02; break; } }   // touch down on the first water cell
   const meet = G.W.freeNear(st.x - 2.0, st.y - 0.3, 1.5), noiHome = {x: noi.x, y: noi.y}, pudHome = {x: G.P.x, y: G.P.y};
-  const A = G.arr = {t: 0, beat: 0, u: 0, lift: 72, row: 0, rowing: false, bump: 0, bonk: 0, rope: 0, seat: true, splash: [], done, d, empty, P0, C, P1, at, wet, meet, noiHome, pudHome, mk, cam: null, card: null, dips: 0};
-  A.boat = {x: P0.x, y: P0.y, z: 0, draw: drawArrBoat};
-  swapItem(d, empty); G.items.push(A.boat);
+  const A = G.arr = {t: 0, beat: 0, u: 0, lift: 72, rowing: false, bump: 0, bonk: 0, rope: 0, seat: true, splash: [], done, d, B, P0, C, P1, at, wet, meet, noiHome, pudHome, mk, cam: null, card: null, dips: -1, cx: P0.x, cy: P0.y, head: 0, z0: d.z || 0};
+  A.boat = boat; A.rider = R.rider(boat, arrRider);
+  A.under = {get x(){ return A.cx; }, get y(){ return A.cy; }, get z(){ return A.z0; }, get depth(){ return boat.x + boat.y + 0.99 + A.lift * 0.0002; }, draw: arrUnder};   // shadow · wake · splashes — under the hull
+  A.over = {get x(){ return A.cx; }, get y(){ return A.cy; }, get z(){ return A.z0; }, get depth(){ return boat.x + boat.y + 1.004; }, draw: arrOver};        // 🪢 rope · ⭐ bonk — over you
+  arrPlace(A, 0); Props.setState(d, 'empty', G.W.M); G.items.push(A.under, boat, A.rider, A.over);
   G.talking = true; document.body.classList.add('talking'); G.H.stop(); G.H.lock = true; closeEmotes(); G.V.follow(null);
   A.cam = {x: P0.x * 0.65 + 34 * 0.35, y: P0.y * 0.65 + 119 * 0.35}; G.V.centerOn(A.cam.x, A.cam.y);
   const chip = document.createElement('div'); chip.id = 'arr-skip'; chip.className = 'arr-skip'; chip.textContent = w('skip'); $('scr-play').appendChild(chip); A.chip = chip;
   A.skip = e => { if(e && e.type === 'keydown' && !/^( |Enter|Escape)$/.test(e.key)) return; if(e){ e.preventDefault(); e.stopPropagation(); } arrEnd(); };
   addEventListener('pointerdown', A.skip, true); addEventListener('keydown', A.skip, true);
   pAct('peek', {hold: true}); return true; }
-/* 🐢 av-lag1: phones draw the map at 1.5× (the frame is GPU-bound at 2×; same look at phone size) — tablets + desks keep IsoKit's own cap */
-function phoneCap(){ try { const coarse = matchMedia('(pointer: coarse)').matches, short = Math.min(screen.width || innerWidth, screen.height || innerHeight); return coarse && short < 600 ? 1.5 : undefined; } catch(e){ return undefined; } }
-function swapItem(a, b){ const i = G.items.indexOf(a); if(i >= 0) G.items[i] = b; }
+/* 🛶 put the rowboat on the curve: heading = the curve's own direction (eased onto the berth's heading as it pulls in) · the bonk rocks it back a little ·
+   it sinks out of the sky (z) while it glides · rowing → 'moored' at the bonk (tied up at the berth = the dock's own boat picture) */
+function arrPlace(A, t){ const R = Props.rowboat, u = Math.min(1, A.u), a0 = A.at(Math.max(0, Math.min(0.99, u) - 0.01)), a1 = A.at(Math.min(1, Math.max(0.01, u) + 0.01));
+  let a = Math.atan2(a1.y - a0.y, a1.x - a0.x); const tie = Math.max(0, Math.min(1, (u - 0.8) / 0.2)), da = ((A.B.a - a) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI; a += da * tie * tie * (3 - 2 * tie);
+  const q = A.at(u), back = A.bump * A.bump * 0.16, x = q.x - Math.cos(a) * back, y = q.y - Math.sin(a) * back, moored = !!A.bonked;
+  A.cx = moored ? A.B.x - Math.cos(A.B.a) * back : x; A.cy = moored ? A.B.y - Math.sin(A.B.a) * back : y; A.head = moored ? A.B.a : a;
+  A.boat.z = A.z0 + A.lift / 16 + A.bump * 0.12; R.at(A.boat, A.cx, A.cy, A.head, {state: moored ? 'moored' : 'rowing'}); Props.tick([A.boat], G.t || 0); }
 function arrStep(dt){ const A = G.arr; if(!A) return; A.t += dt; const t = A.t, T = ARR_T, b0 = T[0], b1 = b0 + T[1], b2 = b1 + T[2], b3 = b2 + T[3], b4 = b3 + T[4];
   const ease = u => u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2, outE = u => 1 - Math.pow(1 - u, 3), cl = u => Math.max(0, Math.min(1, u)), lerp = (a, b, f) => ({x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f});
   A.beat = t < b0 ? 1 : t < b1 ? 2 : t < b2 ? 3 : t < b3 ? 4 : 5;
@@ -200,10 +208,10 @@ function arrStep(dt){ const A = G.arr; if(!A) return; A.t += dt; const t = A.t, 
   if(t < b0){ const f = ease(t / b0); A.u = A.wet * f; A.lift = 72 * (1 - f); }
   else { if(A.lift > 0 || !A.wetDone){ A.lift = 0; A.wetDone = 1; A.splash.push({x: A.at(A.wet).x, y: A.at(A.wet).y, t0: t, seed: 1.1}); tone(330, 0.1, {type: 'sine', gain: 0.07, slide: 220}); }
     A.u = t < b2 ? A.wet + (0.86 - A.wet) * (t - b0) / (b2 - b0) : 0.86 + 0.14 * outE(cl((t - b2) / (T[3] * 0.6))); }
-  A.rowing = t >= b0 && t < b2 + T[3] * 0.55; if(A.rowing){ A.row += dt * Math.PI * 2 / 0.8; const n = Math.floor(A.row / (Math.PI * 2)); if(n > A.dips){ A.dips = n; tone(392, 0.05, {type: 'sine', gain: 0.045}); } }
+  A.rowing = t >= b0 && t < b2 + T[3] * 0.55; if(A.rowing){ const n = Props.rowboat.stroke(G.t || 0).n; if(A.dips < 0) A.dips = n; if(n > A.dips){ A.dips = n; tone(392, 0.05, {type: 'sine', gain: 0.045}); } }   // a soft dip tone a stroke (the rowboat's own oar frames)
   if(!A.bonked && t >= b2 + T[3] * 0.6){ A.bonked = 1; A.bonk = 1; A.bump = 1; A.splash.push({x: A.P1.x + 0.5, y: A.P1.y + 0.3, t0: t, seed: 0.4}); tone(196, 0.12, {type: 'triangle', gain: 0.09}); }
   A.bonk = Math.max(0, A.bonk - dt * 1.6); A.bump = Math.max(0, A.bump - dt * 1.4); A.splash = A.splash.filter(s => t - s.t0 < 0.9);
-  const q = A.at(Math.min(1, A.u)); A.boat.x = q.x; A.boat.y = q.y;
+  arrPlace(A, t); const q = {x: A.cx, y: A.cy};
   // 🐘 the reveal: the Landing card + a look up the main path at the sleeping temple elephant, then back
   if(t >= b1 && !A.card && A.mk){ A.card = isleCard(A.mk); }
   if(t >= b2 - 0.35 && A.card && !A.cardGone){ A.cardGone = 1; const c = A.card; c.classList.remove('on'); setTimeout(() => c.remove(), 400); }
@@ -212,7 +220,7 @@ function arrStep(dt){ const A = G.arr; if(!A) return; A.t += dt; const t = A.t, 
   if(noi && t >= b2 - 0.4){ const p = lerp(A.noiHome, A.meet, ease(nf)); noi.x = p.x; noi.y = p.y; noi.z = G.W.M.heightAt(Math.floor(p.x), Math.floor(p.y)); noi.walkT = nf < 1 ? (noi.walkT || 0) + dt * 1.6 : 0; noi.dir = A.meet.x > A.noiHome.x ? 1 : -1;
     noi.pose = nf >= 1 ? {armR: 2.7 + Math.sin(t * 12) * 0.35, face: 'joy'} : null;
     const pp = lerp(A.pudHome, {x: A.meet.x - 0.35, y: A.meet.y - 1.05}, ease(cl(nf * 1.1))); G.P.x = G.P.px = pp.x; G.P.y = G.P.py = pp.y; G.P.moving = nf > 0 && nf < 0.95; if(G.P.moving) G.P.walkT = (G.P.walkT || 0) + dt * 1.6; }
-  if(t >= b3 && A.seat){ A.seat = false; A.rope = 1; G.H.x = G.H.px = G.H.it.x = A.P1.x - 0.25; G.H.y = G.H.py = G.H.it.y = A.P1.y; G.H.hop = 0; G.H.dir = -1; tone(523, 0.08, {type: 'sine', gain: 0.07}); }
+  if(t >= b3 && A.seat){ A.seat = false; A.rope = 1; arrTie(A); G.H.x = G.H.px = G.H.it.x = A.P1.x - 0.25; G.H.y = G.H.py = G.H.it.y = A.P1.y; G.H.hop = 0; G.H.dir = -1; tone(523, 0.08, {type: 'sine', gain: 0.07}); }
   if(!A.seat){ const f = cl((t - b3) / 0.5), s = G.W.spot('start'), p = lerp({x: A.P1.x - 0.25, y: A.P1.y}, s, f); G.H.x = G.H.px = p.x; G.H.y = G.H.py = p.y; }
   if(t >= b3 + 0.3 && !A.tooted){ A.tooted = 1; pAct('toot', {again: true, on: tootSound}); }
   // 🎥 the camera: the boat → up the path to the elephant → back to the dock
@@ -220,9 +228,11 @@ function arrStep(dt){ const A = G.arr; if(!A) return; A.t += dt; const t = A.t, 
   let aim = t < b1 ? lerp(q, {x: 34, y: 119}, 0.3) : t < b2 ? (t < b2 - 0.5 ? el : dock) : dock; const k = 1 - Math.exp(-dt * (t >= b1 && t < b2 ? 2.6 : 3.4));
   A.cam.x += (aim.x - A.cam.x) * k; A.cam.y += (aim.y - A.cam.y) * k; G.V.centerOn(A.cam.x, A.cam.y);
   if(t >= b4) arrEnd(); }
+/* 🪢 you hop out → the dock ties its OWN boat again (Props.setState 'moored' = the same hull at the same berth) and the rowboat + rider go; the rope + splashes stay */
+function arrTie(A){ G.items = G.items.filter(x => x !== A.boat && x !== A.rider); if(A.d.state !== 'moored') Props.setState(A.d, 'moored', G.W.M); }
 function arrEnd(){ const A = G.arr; if(!A) return; G.arr = null; removeEventListener('pointerdown', A.skip, true); removeEventListener('keydown', A.skip, true);
   if(A.chip) A.chip.remove(); if(A.card){ A.card.remove(); }
-  swapItem(A.empty, A.d); const i = G.items.indexOf(A.boat); if(i >= 0) G.items.splice(i, 1);
+  arrTie(A); G.items = G.items.filter(x => x !== A.under && x !== A.over);   // the rowboat goes, the dock ties its own boat again
   const s = G.W.spot('start'); G.H.x = G.H.px = G.H.it.x = s.x; G.H.y = G.H.py = G.H.it.y = s.y; G.H.hop = -1; G.H.dir = -1;
   const noi = G.people.find(p => p.id === 'noi'); if(noi){ noi.x = A.meet.x; noi.y = A.meet.y; noi.z = G.W.M.heightAt(Math.floor(A.meet.x), Math.floor(A.meet.y)); noi.walkT = 0; noi.pose = null; noi.dir = 1; G.noiBack = {from: {x: A.meet.x, y: A.meet.y}, to: A.noiHome, t: -1}; }
   G.P.x = G.P.px = A.meet.x - 0.35; G.P.y = G.P.py = A.meet.y - 1.05; G.P.moving = false; G.pact = null;
@@ -232,39 +242,31 @@ function noiBackStep(dt){ const B = G.noiBack; if(!B || G.talking || G.arr) retu
   const noi = G.people.find(p => p.id === 'noi'); if(!noi){ G.noiBack = null; return; } B.t += dt / 1.8; const f = Math.min(1, B.t), e = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
   noi.x = B.from.x + (B.to.x - B.from.x) * e; noi.y = B.from.y + (B.to.y - B.from.y) * e; noi.z = G.W.M.heightAt(Math.floor(noi.x), Math.floor(noi.y)); noi.dir = B.to.x > B.from.x ? 1 : -1; noi.walkT = f < 1 ? (noi.walkT || 0) + dt * 1.6 : 0;
   if(f >= 1){ noi.walkT = 0; noi.dir = -1; G.noiBack = null; } }
-/* the rowing boat — the dock's own hull (same colours), 2 oars with a stroke phase, the hero sits IN it (drawn only above the near rim), wake + splashes */
-function drawArrBoat(g, sx, sy, k){ const A = G.arr; if(!A) return; const u = Math.min(0.995, Math.max(0.02, A.u)), a0 = A.at(Math.max(0, u - 0.01)), a1 = A.at(Math.min(1, u + 0.01));
-  const a = Math.atan2(a1.y - a0.y, a1.x - a0.x) + A.bump * 0.1 * Math.sin(G.t * 18), bob = Math.sin(G.t * 2.2) * 1.2 + A.bump * 2, z = 3 + bob + A.lift, P = (du, dv, dz) => [sx + (du - dv) * 32 * k, sy + (du + dv) * 16 * k - (dz || 0) * k];
+/* 🧑 you, sitting IN the rowboat (Props.rowboat.rider clips you above the near rim) — arms pull with the boat's own oar frames */
+function arrRider(g, o){ const A = G.arr; if(!A || !A.seat) return; const pull = o.pull || 0;
+  drawAvatar(g, {av: G.heroAv, name: G.save.name, dir: o.dir}, o.x, o.y + 19 * o.zoom, o.zoom * AK, {t: G.t, still: true, pose: {face: A.beat >= 4 ? 'joy' : 'focused', armL: 1.0 + pull * 0.7, armR: 1.0 + pull * 0.7, bend: -0.1 * pull, kneeL: 1.4, kneeR: 1.4, legL: -1.2, legR: -1.1, dy: 6}}); }
+/* 🌊 under the hull: the shadow on the water while it sinks out of the sky · the long wake V while you row · the splash-down + bonk splashes */
+function arrUnder(g, sx, sy, k){ const A = G.arr; if(!A) return; const a = A.head, P = (du, dv) => [sx + (du - dv) * 32 * k, sy + (du + dv) * 16 * k];
   const ripple = (x, y, r, al) => { g.save(); g.globalAlpha = al; g.strokeStyle = '#FFFFFF'; g.lineWidth = 2 * k; g.beginPath(); g.ellipse(x, y, r * k, r * 0.5 * k, 0, 0, 7); g.stroke(); g.restore(); };
-  if(A.lift > 1){ const sh = P(0, 0, 0); g.fillStyle = 'rgba(20,40,60,' + (0.2 * (1 - A.lift / 72)).toFixed(3) + ')'; g.beginPath(); g.ellipse(sh[0], sh[1], 40 * k, 14 * k, 0, 0, 7); g.fill(); }
-  if(A.rowing && !A.lift) for(let i = 1; i <= 4; i++){ const q = P(-Math.cos(a) * (0.5 + i * 0.42), -Math.sin(a) * (0.5 + i * 0.42), 0); ripple(q[0], q[1], 9 + i * 6, 0.5 - i * 0.1); }
-  A.splash.forEach(s => { const f = (A.t - s.t0) / 0.9, q = P(s.x - A.boat.x, s.y - A.boat.y, 0); for(let r = 0; r < 2; r++) ripple(q[0], q[1], 6 + f * 18 + r * 7, (1 - f) * 0.8);
-    g.fillStyle = 'rgba(255,255,255,' + (1 - f).toFixed(3) + ')'; for(let n = 0; n < 6; n++){ const an = n * 1.05 + s.seed, rr = f * 14 * k; g.beginPath(); g.arc(q[0] + Math.cos(an) * rr, q[1] - Math.abs(Math.sin(an)) * rr * 1.4 - f * (1 - f) * 30 * k, 2.6 * k, 0, 7); g.fill(); } });
-  const len = 1.65, wid = 0.3, N = 16, ca = Math.cos(a), sa = Math.sin(a), lift = v => 7 * Math.pow(Math.abs(2 * v - 1), 3);
-  const pt = (v, side, zz) => { const L = (v - 0.5) * len, W = side * wid * Math.pow(Math.sin(Math.PI * v), 0.7); return P(ca * L - sa * W, sa * L + ca * W, zz); };
-  const rA = [], rB = [], keel = []; for(let i = 0; i <= N; i++){ const v = i / N; rA.push(pt(v, 1, z + 6 + lift(v))); rB.push(pt(v, -1, z + 6 + lift(v))); keel.push(pt(v, 0, z - 3 + lift(v) * 0.8)); }
-  const front = (ca - sa) > 0 ? rA : rB, back = front === rA ? rB : rA, poly = pts => { g.beginPath(); pts.forEach((q, i) => i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1])); g.closePath(); };
-  poly(back.concat(front.slice().reverse())); g.fillStyle = '#7A4A22'; g.fill();
-  for(let i = 4; i < N; i += 4){ const v = i / N, p = pt(v, 0.9, z + 5), q = pt(v, -0.9, z + 5); g.strokeStyle = '#C99257'; g.lineWidth = 2.4 * k; g.beginPath(); g.moveTo(p[0], p[1]); g.lineTo(q[0], q[1]); g.stroke(); }
-  const oar = side => { const sw = A.rowing ? Math.sin(A.row) * 0.55 : 0.35 * side, dip = A.rowing ? (Math.cos(A.row) > 0 ? -1 : 7) : 4, lock = [-sa * side * 0.24, ca * side * 0.24], dir = [Math.cos(a + side * Math.PI / 2 + side * sw), Math.sin(a + side * Math.PI / 2 + side * sw)];
-    const hand = P(lock[0] - dir[0] * 0.2, lock[1] - dir[1] * 0.2, z + 18), lk = P(lock[0], lock[1], z + 8), bl = P(lock[0] + dir[0] * 0.75, lock[1] + dir[1] * 0.75, z + dip);
-    g.strokeStyle = '#5A3418'; g.lineWidth = 3 * k; g.lineCap = 'round'; g.beginPath(); g.moveTo(hand[0], hand[1]); g.lineTo(lk[0], lk[1]); g.lineTo(bl[0], bl[1]); g.stroke();
-    g.save(); g.translate(bl[0], bl[1]); g.rotate(Math.atan2(bl[1] - lk[1], bl[0] - lk[0])); g.fillStyle = '#E2B07A'; g.strokeStyle = '#5A3418'; g.lineWidth = 1.3 * k; g.beginPath(); g.ellipse(0, 0, 8 * k, 3.6 * k, 0, 0, 7); g.fill(); g.stroke(); g.restore();
-    if(A.rowing && dip < 0){ g.fillStyle = 'rgba(255,255,255,.85)'; for(let n = 0; n < 3; n++){ g.beginPath(); g.arc(bl[0] + (n - 1) * 5 * k, bl[1] - 4 * k - (n % 2) * 4 * k, 2.1 * k, 0, 7); g.fill(); } } };
-  oar(1); oar(-1);
-  if(A.seat){ const seat = P(-ca * 0.06, -sa * 0.06, z + 2), pull = A.rowing ? Math.sin(A.row) : 0, dir = (ca - sa) >= 0 ? 1 : -1, xs = front.map(q => q[0]), x0 = Math.min.apply(null, xs) - 90 * k, x1 = Math.max.apply(null, xs) + 90 * k, ord = front[0][0] < front[N][0] ? front : front.slice().reverse();
-    g.save(); g.beginPath(); g.moveTo(x0, ord[0][1]); ord.forEach(q => g.lineTo(q[0], q[1] + 2 * k)); g.lineTo(x1, ord[N][1]); g.lineTo(x1, -1e4); g.lineTo(x0, -1e4); g.closePath(); g.clip();   // only the part above the near rim = sitting IN the boat
-    drawAvatar(g, {av: G.heroAv, name: G.save.name, dir}, seat[0], seat[1] + 19 * k, k * AK, {t: G.t, still: true, pose: {face: A.beat >= 4 ? 'joy' : 'focused', armL: 1.0 + pull * 0.7, armR: 1.0 + pull * 0.7, bend: -0.1 * pull, kneeL: 1.4, kneeR: 1.4, legL: -1.2, legR: -1.1, dy: 6}}); g.restore(); }
-  const col = ['#E2553A', '#2EC4B6', '#FFB21A'][(A.d.v | 0) % 3]; poly(front.concat(keel.slice().reverse())); g.fillStyle = Iso.shade ? Iso.shade(col, -0.06) : col; g.fill(); g.strokeStyle = 'rgba(42,28,20,0.55)'; g.lineWidth = 1.4 * k; g.stroke();
-  g.strokeStyle = '#FFF3DC'; g.lineWidth = 1.6 * k; g.beginPath(); front.forEach((q, i) => i ? g.lineTo(q[0], q[1] + 2.5 * k) : g.moveTo(q[0], q[1] + 2.5 * k)); g.stroke();
-  if(A.rope){ const bow = pt(0.97, 0, z + 9), post = P(-ca * 1.0 - sa * 0.45, -sa * 1.0 + ca * 0.45, 16); g.strokeStyle = '#C9A06A'; g.lineWidth = 2.2 * k; g.beginPath(); g.moveTo(bow[0], bow[1]); g.quadraticCurveTo((bow[0] + post[0]) / 2, Math.max(bow[1], post[1]) + 10 * k, post[0], post[1]); g.stroke(); }
-  if(A.bonk > 0){ const q = pt(1, 0, z + 14); g.save(); g.globalAlpha = Math.min(1, A.bonk * 1.5); g.translate(q[0] + 8 * k, q[1] - 14 * k); g.scale(0.7 + A.bonk * 0.4, 0.7 + A.bonk * 0.4); g.fillStyle = '#FFD23F'; g.strokeStyle = '#2B2D42'; g.lineWidth = 2; g.beginPath();
+  if(A.lift > 1){ g.fillStyle = 'rgba(20,40,60,' + (0.2 * (1 - A.lift / 72)).toFixed(3) + ')'; g.beginPath(); g.ellipse(sx, sy, 40 * k, 14 * k, 0, 0, 7); g.fill(); }
+  if(A.rowing && !A.lift) for(let i = 1; i <= 4; i++){ const q = P(-Math.cos(a) * (0.5 + i * 0.42), -Math.sin(a) * (0.5 + i * 0.42)); ripple(q[0], q[1], 9 + i * 6, 0.5 - i * 0.1); }
+  A.splash.forEach(s => { const f = (A.t - s.t0) / 0.9, q = P(s.x - A.cx, s.y - A.cy); for(let r = 0; r < 2; r++) ripple(q[0], q[1], 6 + f * 18 + r * 7, (1 - f) * 0.8);
+    g.fillStyle = 'rgba(255,255,255,' + (1 - f).toFixed(3) + ')'; for(let n = 0; n < 6; n++){ const an = n * 1.05 + s.seed, rr = f * 14 * k; g.beginPath(); g.arc(q[0] + Math.cos(an) * rr, q[1] - Math.abs(Math.sin(an)) * rr * 1.4 - f * (1 - f) * 30 * k, 2.6 * k, 0, 7); g.fill(); } }); }
+/* 🪢 over you: the rope from the bow ring round the dock post · the ⭐ bonk star at the bow */
+function arrOver(g, sx, sy, k, V){ const A = G.arr; if(!A || !V) return; const ca = Math.cos(A.head), sa = Math.sin(A.head), bw = A.boat.aim, z0 = A.z0;
+  const bow = bw ? V.toScreen(bw.x, bw.y, bw.z) : V.toScreen(A.cx + ca * 0.8, A.cy + sa * 0.8, z0 + 0.75);
+  if(A.rope){ const post = V.toScreen(A.cx - ca * 1.0 - sa * 0.45, A.cy - sa * 1.0 + ca * 0.45, z0 + 1); g.strokeStyle = '#C9A06A'; g.lineWidth = 2.2 * k; g.lineCap = 'round'; g.beginPath(); g.moveTo(bow.x, bow.y); g.quadraticCurveTo((bow.x + post.x) / 2, Math.max(bow.y, post.y) + 10 * k, post.x, post.y); g.stroke(); }
+  if(A.bonk > 0){ g.save(); g.globalAlpha = Math.min(1, A.bonk * 1.5); g.translate(bow.x + 8 * k, bow.y - 16 * k); g.scale(0.7 + A.bonk * 0.4, 0.7 + A.bonk * 0.4); g.fillStyle = '#FFD23F'; g.strokeStyle = '#2B2D42'; g.lineWidth = 2; g.beginPath();
     for(let i = 0; i < 10; i++){ const r = i % 2 ? 7 * k : 15 * k, an = i * Math.PI / 5 - Math.PI / 2; g.lineTo(Math.cos(an) * r, Math.sin(an) * r); } g.closePath(); g.fill(); g.stroke(); g.restore(); } }
 /* ☁️ a few soft clouds at the bay's open rim while the boat glides out of them */
 function arrClouds(g, V){ const A = G.arr; if(!A || A.t > ARR_T[0] + ARR_T[1]) return; const fade = A.t < ARR_T[0] ? 0.92 : 0.92 * (1 - (A.t - ARR_T[0]) / ARR_T[1]);
   [[1.1, 0.2, 1], [-0.6, 1.6, 0.8], [2.2, -1.6, 0.75], [-2.0, 3.0, 0.6]].forEach(([dx, dy, r]) => { const q = V.toScreen(A.P0.x + dx - 0.9, A.P0.y + dy - 0.6, 1.4), R = 60 * r * V.zoom; g.save(); g.globalAlpha = fade; g.fillStyle = '#FFFFFF';
     [[0, 0, 1], [-0.8, 0.2, 0.72], [0.85, 0.25, 0.78], [0.2, -0.35, 0.7]].forEach(c => { g.beginPath(); g.arc(q.x + c[0] * R, q.y + c[1] * R, R * c[2] * 0.62, 0, 7); g.fill(); }); g.restore(); }); }
-window.AvArrive = {state: () => G.arr ? {beat: G.arr.beat, t: G.arr.t, u: G.arr.u, seat: G.arr.seat} : null, skip: () => arrEnd()};   /* tests */
+window.AvArrive = {state: () => G.arr ? {beat: G.arr.beat, t: G.arr.t, u: G.arr.u, seat: G.arr.seat, dock: G.arr.d.state, boat: G.arr.boat.state, head: G.arr.head, z: G.arr.boat.z} : null, skip: () => arrEnd()};   /* tests */
+/* 🐢 av-lag1: phones draw the map at 1.5× (the frame is GPU-bound at 2×; same look at phone size) — tablets + desks keep IsoKit's own cap */
+function phoneCap(){ try { const coarse = matchMedia('(pointer: coarse)').matches, short = Math.min(screen.width || innerWidth, screen.height || innerHeight); if(coarse && short < 600) return 1.5;
+    const d = devicePixelRatio || 1, q = new URLSearchParams(location.search); if(q.get('sharp') === 'full') return undefined;   /* 🐢 av-int1 ①: &sharp=full = the old full sharpness (device check) */
+    return !coarse && d > 1.5 && innerWidth * innerHeight * d * d > 3e6 ? 1.5 : undefined; } catch(e){ return undefined; } }
 /* ---------- 🌟 av-s2a: an islet's first-visit reveal ---------- */
 /* 🪧 the islet's first-visit card (title + hook) — isleReveal + the 🛶 arrival (av-boat) */
 function isleCard(mk){
@@ -335,6 +337,7 @@ function doEmote(k, fromTalk){ if(!heroAct(EMOTE_ACT[k])) return; G.H.stop(); so
   if(k === 'breathe'){ G.flags['emote.breathe'] = 1; toast(w('breathe'), 2600); if(Math.hypot(G.P.x - G.H.x, G.P.y - G.H.y) < 4) setTimeout(() => pAct('breathe', {again: true}), 300); }
   if(k === 'splash'){ G.flags['seen.splash'] = 1; pAct('splash', {again: true}); }
   if(k === 'dance' && Math.hypot(G.P.x - G.H.x, G.P.y - G.H.y) < 4) pAct('cheer', {again: true});
+  if(k === 'wave' && G.P.on && Math.hypot(G.P.x - G.H.x, G.P.y - G.H.y) < 4) setTimeout(() => pAct('flap', {again: true}), 250);   /* 🐘 av-pet2: Pudding waves back with his ears */
   G.ST.event({do: 'gesture', what: k}); drawTracker(); updateGoal(); }
 const nearPond = () => { const s = G.W.spot('pond'); return s && Math.hypot(s.x - G.H.x, s.y - G.H.y) < 3; };
 
@@ -359,7 +362,11 @@ function guide(){ const q = G.hint, hand = $('hand'); let show = false;
   if(q && q.gate && !G.talking){ const J = G.J, near = J.on || AvWorld.gateNear(G.W, G.H, 1.25); if(near && !(J.on && J.busy)){ const r = $('b-jump').getBoundingClientRect(); hand.style.left = (r.left - 30) + 'px'; hand.style.top = (r.top + r.height * 0.35) + 'px'; hand.style.transform = 'rotate(70deg)'; show = true; } }
   if(q && q.emote && !G.talking && $('emotes').classList.contains('hidden')){ const noi = G.W.spot('noi'); if(Math.hypot(noi.x - G.H.x, noi.y - G.H.y) < 4.5){ const r = $('b-emote').getBoundingClientRect(); hand.style.left = (r.left - 30) + 'px'; hand.style.top = (r.top + r.height * 0.3) + 'px'; hand.style.transform = 'rotate(70deg)'; show = true; } }
   if(q && q.emote && !$('emotes').classList.contains('hidden')){ const b = $('emotes').querySelector('[data-k="wave"]'); if(b){ const r = b.getBoundingClientRect(); hand.style.left = (r.left + r.width * 0.45) + 'px'; hand.style.top = (r.bottom - 6) + 'px'; hand.style.transform = 'rotate(0deg)'; show = true; } }
-  hand.classList.toggle('hidden', !show); $('b-jump').classList.toggle('pz-glow', !!(q && q.gate) && show); }
+  const basic = (G.save && G.save.help || 'guide') === 'guide', bA = $('b-act'), bS = $('b-swing'); let gA = false, gS = false;
+  if(!show && basic && !G.talking && !G.battle && G.reach && !G.flags['int.used']){ const r = bA.getBoundingClientRect(); hand.style.left = (r.left - 30) + 'px'; hand.style.top = (r.top + r.height * 0.35) + 'px'; hand.style.transform = 'rotate(70deg)'; show = gA = true; }
+  if(!show && basic && !G.talking && !G.battle && G.fightNear && G.fightNear.tag !== 'T' && !G.flags['int.fight']){ const r = bS.getBoundingClientRect(); hand.style.left = (r.left - 30) + 'px'; hand.style.top = (r.top + r.height * 0.35) + 'px'; hand.style.transform = 'rotate(70deg)'; show = gS = true; }
+  if(bA) bA.classList.toggle('pz-glow', gA); if(bS) bS.classList.toggle('pz-glow', gS);   /* ✋ ⚔️ av-int1 */
+  hand.classList.toggle('hidden', !show); $('b-jump').classList.toggle('pz-glow', !!(q && q.gate) && show && !gA && !gS); }
 /* 👣 footsteps to the goal (recomputed twice a second, never every frame) */
 function footsteps(){ const q = G.hint; if(!q || !q.target || G.talking){ G.foot = null; return; } const d = Math.hypot(q.target.x - G.H.x, q.target.y - G.H.y); if(d < 2.2 || G.J.on){ G.foot = null; return; }
   const p = Iso.path(G.W.M, {x: G.H.x, y: G.H.y}, G.W.freeNear(q.target.x, q.target.y, 2)); G.foot = p && p.length > 2 ? p.slice(1, 14) : null; }
@@ -381,8 +388,11 @@ function qStep(id){ const a = G.ST && G.ST.data.q[id]; return G.ST && G.ST.statu
 const near = (a, b, r) => a && b && Math.hypot(a.x - b.x, a.y - b.y) < r;
 function freeSpot(k){ const s = G.W.spot(k); return s ? G.W.freeNear(s.x, s.y, 2) : null; }
 /* 🐾 your pet follows a little behind Pudding (levels with you, §17w-3) */
-function drawPet(g, sx, sy, k){ const Q = G.Q, o = {t: G.t, face: Q.dir > 0 ? 'right' : 'left', pet: true}; if(Q.moving && Creatures.walkPose) o.pose = Creatures.walkPose(Q.walkT);
-  try { Creatures.drawFor(g, G.save.pet, sx, sy, 88 * k * AK * 0.62, o); } catch(e){} }
+function drawPetOf(Q, id, g, sx, sy, k){ let o = {t: G.t, face: Q.dir > 0 ? 'right' : 'left', pet: true}; if(Q.moving && Creatures.walkPose) o.pose = Creatures.walkPose(Q.walkT);
+  if(PETS && PETS.petLook) o = PETS.petLook(Q, id, o);   /* 🫧 av-pet2: 🎬 alive (breath · blink · gait) + family / signature idle gimmicks */
+  const sz = 88 * k * AK * 0.62; let an = null; try { an = Creatures.drawFor(g, id, sx, sy, sz, o); } catch(e){} if(PETS && PETS.petFx) PETS.petFx(g, Q, id, an, o, sx, sy, sz); }
+function drawPet(g, sx, sy, k){ drawPetOf(G.Q, G.save.pet, g, sx, sy, k); }
+function drawPet2(g, sx, sy, k){ drawPetOf(G.Q2, G.save.pet2, g, sx, sy, k); }   /* 🐾 av-bag1: the 2nd pet slot */
 /* 👾 monsters you can see (touch one = a battle — never a surprise battle, §16c) */
 function mobItem(m){ const it = {x: m.x, y: m.y, z: G.W.M.heightAt(Math.floor(m.x), Math.floor(m.y)), mob: m,
     draw(g, sx, sy, k){ const L = m.list, n = L.length, sp = 15 * k * AK, face = G.H.x < m.x ? 'left' : 'right';
@@ -432,14 +442,26 @@ function placePeople(){ const noi = G.people.find(p => p.id === 'noi'); if(noi &
   if(!want && tara){ G.people = G.people.filter(p => p !== tara); G.items = G.items.filter(x => x !== tara); } }
 /* 🐘 Pudding ran off to Mango Grove (m2 ① ②) */
 function placePudding(){ const s = qStep('il1.m2'); if(s === 0 || s === 1){ const p = freeSpot('pudgrove'); G.P.on = false; G.P.x = G.P.px = p.x; G.P.y = G.P.py = p.y; } else if(G.flags['il1.m1']) G.P.on = true; }
-function petFollow(){ const s = G.save; if(s.pet && !G.Q){ const p = G.W.freeNear(G.H.x - 1, G.H.y + 1, 2); G.Q = AvWorld.follower(G.W, G.H, {x: p.x, y: p.y, gap: 1.75, on: true}); G.Q.it = {x: G.Q.x, y: G.Q.y, z: G.Q.z, draw: drawPet}; G.items.push(G.Q.it); } }
+function petFollow(){ const s = G.save; if(s.pet && !G.Q){ const p = G.W.freeNear(G.H.x - 1, G.H.y + 1, 2); G.Q = AvWorld.follower(G.W, G.H, {x: p.x, y: p.y, gap: 1.75, on: true}); G.Q.it = {x: G.Q.x, y: G.Q.y, z: G.Q.z, draw: drawPet}; G.items.push(G.Q.it); }
+  if(s.pet2 && G.Q && !G.Q2){ const p = G.W.freeNear(G.Q.x - 1, G.Q.y + 1, 2); G.Q2 = AvWorld.follower(G.W, G.H, {x: p.x, y: p.y, gap: 2.8, on: true}); G.Q2.it = {x: G.Q2.x, y: G.Q2.y, z: G.Q2.z, draw: drawPet2}; G.items.push(G.Q2.it); } }   /* 🐾 av-bag1: pet 2 walks a little further back on your trail (a follower follows the hero's trail) */
+function petsRefresh(){ const drop = q => { if(!q) return; const i = G.items.indexOf(q.it); if(i >= 0) G.items.splice(i, 1); }; drop(G.Q2); G.Q2 = null; if(G.Q && G.Q.pid !== G.save.pet){ drop(G.Q); G.Q = null; } petFollow(); if(G.Q) G.Q.pid = G.save.pet; }
+function petList(){ const s = G.save, ids = []; [s.pet, s.pet2].concat((s.pets || []).map(x => x.id)).forEach(id => { if(id && ids.indexOf(id) < 0) ids.push(id); }); const nm = id => (id === s.pet && s.petName) ? s.petName : ((AvBattle.PETS[id] || {}).names || [id])[0]; return ids.map(id => ({id, name: nm(id)})); }
 function setupS1b(){ const s = G.save; drawLv(); petFollow();
   if(!G.critters.length){ critter('kaikai', 'kaikai', 'crow'); critter('paddypinch', 'paddy', 'pinch'); }
   placePudding(); placePeople(); syncMobs(); syncDrops(); dressPads(); }
 /* ⚔️ the ⚔️ button: next to a monster = fight · otherwise a practice swing */
-function swingPress(){ if(G.talking || G.battle) return; if(!G.save.job){ toast(w('soon')); sound('nope'); return; } const m = G.mobs.find(x => near(x, G.H, 1.8)); if(m && m.tag === 'T'){ toast(w('gentle'), 2400); sound('nope'); return; } if(m) return fight(m);
-  const c = G.critters.find(x => near(x, G.H, 1.6)); if(c){ const p = G.V.toScreen(c.it.x, c.it.y, c.it.z); sticker(p.x, p.y - 50 * G.V.zoom, w(c.say)); }
-  heroAct('beat.throw'); sound('tap'); }
+function swingPress(){ if(G.talking || G.battle || G.swinging) return; if(!G.save.job){ toast(w('soon')); sound('nope'); return; } const m = fightTarget(); if(m && m.tag === 'T'){ toast(w('gentle'), 2400); sound('nope'); return; }
+  G.flags['int.fight'] = 1; const mv = heroMove(); if(m){ G.H.dir = m.x >= G.H.x ? 1 : -1; G.H.stop(); }
+  /* ⚔️ av-int1 (Q10 ⭐ A): one move per weapon TYPE — the swing plays on the map, a monster in reach = the battle opens on the CONTACT beat */
+  const go = () => { G.swinging = false; if(m && G.mobs.indexOf(m) >= 0 && !G.battle && !G.talking) fight(m); };
+  G.swinging = !!m; if(!heroAct(mv.key, {onContact: () => { sound(mv.hit === 'slash' ? 'tap' : 'pop'); swingFx(mv, m); if(m) setTimeout(go, 160); }})){ heroAct('beat.punch'); if(m) setTimeout(go, 300); }
+  if(!m){ const c = G.critters.find(x => near(x, G.H, 1.6)); if(c){ const p = G.V.toScreen(c.it.x, c.it.y, c.it.z); sticker(p.x, p.y - 50 * G.V.zoom, w(c.say)); } }
+  setTimeout(() => { G.swinging = false; }, 2600); }
+function heroMove(){ const s = G.save, sets = s.job ? curSets() : null, set = sets ? (sets[s.set || 0] || sets[0]) : null; return AvBattle.moveFor ? AvBattle.moveFor(set ? set[0] : 'sword', s.job) : {key: 'beat.throw', hit: 'slash'}; }
+function fightTarget(){ let b = null, bd = 1.8; G.mobs.forEach(x => { const d = Math.hypot(x.x - G.H.x, x.y - G.H.y); if(d < bd){ bd = d; b = x; } }); return b; }
+/* 💥 the swing's contact on the map: a 🌱 sprout (watering can) · a ⭐ bonk (pan) · a little dust on the ground (greatsword) — stickers, no extra canvas work */
+function swingFx(mv, m){ const at = m ? m.it : G.H.it, p = G.V.toScreen(at.x + (m ? 0 : G.H.dir * 0.9), at.y, at.z), z = G.V.zoom;
+  if(mv.fx === 'sprout') sticker(p.x, p.y - 30 * z, '🌱', '#22A867'); else if(mv.fx === 'flip') sticker(p.x, p.y - 60 * z, '⭐', '#FF8A2A'); else if(mv.fx === 'thud'){ sticker(p.x, p.y - 20 * z, '💥', '#8A5A2B'); try { if(G.V.shake) G.V.shake(4); } catch(e){} } }
 async function fight(m, o){ if(G.battle || G.talking) return; o = o || {}; G.battle = true; G.H.stop(); closeEmotes(); document.body.classList.add('battling'); const s = G.save, J = JOB(), sets = curSets();
   const cfg = {lang: G.lang, hero: {name: s.name, av: G.heroDressed || G.heroBase, lv: s.lv, job: s.job, set: Math.min(s.set || 0, sets.length - 1), sets}, heroAv: G.heroAv, pet: s.pet ? {id: s.pet, lv: s.lv, name: s.petName || undefined} : null,
     befriend: !!G.flags['pet.house'] && !!m && m.tag === 'roam' && o.mode !== 'duel', snacks: s.snacks || {}, charm: s.charm || 0,   /* 🐾 av-pet1: once i3 is done, the last foe can sit down tired → ❤️ the friend meter */
@@ -500,12 +522,12 @@ function goalS1b(){ const m2 = G.ST.status('il1.m2'), s = qStep('il1.m2');
   if(i3 === 'open') return {text: w('talkNoi'), target: G.people.find(p => p.id === 'noi')};
   return undefined; }
 /* ⏱️ each tick: Pudding found · mangoes · the stream · touching a monster · critters potter */
-function stepS1b(dt){ if(G.Q) G.Q.step(dt); if(G.talking || !G.ST) return; const H = G.H, s = qStep('il1.m2');
+function stepS1b(dt){ if(G.Q) G.Q.step(dt); if(G.Q2) G.Q2.step(dt); if(G.talking || !G.ST) return; const H = G.H, s = qStep('il1.m2');
   if(s === 0 && G.W.zoneAt(H.x, H.y) === 'mango') G.ST.event({do: 'go', what: 'mango'});
-  if(s === 1 && near(G.P, H, 1.8) && !H.moving){ talkP('t.il1.m2.step2').then(() => { G.ST.event({do: 'talk', who: 'avateer.pudding'}); }); return; }
+  /* (✋ av-int1: m2 ② "find Pudding" = a ✋ Talk on her — reachList) */
   if(s === 3){ const d = G.drops.find(x => near(x, H, 0.9)); if(d){ G.drops = G.drops.filter(x => x !== d); G.items = G.items.filter(x => x !== d); sound('pop'); const p = G.V.toScreen(d.x, d.y, d.z); sticker(p.x, p.y - 30 * G.V.zoom, '🥭'); G.ST.event({do: 'collect', what: 'mango'}); return; } }
   if(s === 6 && near(G.W.spot('stream'), H, 2.8)){ G.ST.event({do: 'go', what: 'stream'}); return; }
-  const m = G.mobs.find(x => near(x, H, 1.05) && x.tag !== 'T'); if(m && !G.J.on){ fight(m); return; }   /* 🐾 av-pet1: the gentle one is never a fight */
+  /* ⚔️ av-int1: touching a monster no longer starts a battle by itself — ⚔️ Fight (F) lights up when one is in reach (stepInt) */
   if(s === 2 && !G.rolling){ const left = 3 - ((G.ST.data.q['il1.m2'] || [0, 0])[1] || 0), a = G.mobs.find(x => x.tag === 'A' && near(x, H, 3.2)); if(left === 1 && a && near(G.P, H, 4)) { G.rolling = a; a.roll = 0; pAct('toot', {again: true, on: tootSound}); const p = G.V.toScreen(a.it.x, a.it.y, a.it.z); sticker(p.x, p.y - 60 * G.V.zoom, w('rollAway')); } }
   if(G.rolling){ const a = G.rolling; a.roll += dt; a.x += (a.x - G.H.x) * dt * 1.6; a.it.x = a.x; if(a.roll > 0.9){ G.rolling = null; dropMob(a); G.ST.event({do: 'beat', what: 'mangobble', n: 1}); } return; }
   G.mobs.forEach(x => { const dH = Math.hypot(x.x - H.x, x.y - H.y); x.notice += ((dH < 3.6 ? 1 : 0) - x.notice) * Math.min(1, dt * 5);
@@ -513,6 +535,50 @@ function stepS1b(dt){ if(G.Q) G.Q.step(dt); if(G.talking || !G.ST) return; const
     if(x.tx != null){ const dx = x.tx - x.x, dy = x.ty - x.y, d = Math.hypot(dx, dy); if(d < 0.05){ x.tx = null; } else { x.x += dx / d * Math.min(d, dt * 0.6); x.y += dy / d * Math.min(d, dt * 0.6); } x.it.x = x.x; x.it.y = x.y; } });
   G.critters.forEach(c => { c.t += dt; if(Math.sin(c.t * 0.7) > 0.96 && !c.go){ c.go = 1; const a = Math.random() * 7; c.tx = c.home.x + Math.cos(a) * 1.2; c.ty = c.home.y + Math.sin(a) * 1.2; }
     if(c.go){ const dx = c.tx - c.x, dy = c.ty - c.y, d = Math.hypot(dx, dy); if(d < 0.05 || !G.W.M.walk(Math.floor(c.tx), Math.floor(c.ty))) c.go = 0; else { c.dir = dx > 0 ? 1 : -1; c.x += dx / d * Math.min(d, dt * 0.9); c.y += dy / d * Math.min(d, dt * 0.9); c.it.x = c.x; c.it.y = c.y; } } }); }
+
+/* ---------- ✋ av-int1 · interact (Aowu 16:40 + 17:07 Q9 ⭐ A): its OWN middle petal + E · nothing starts by itself · tap a person / thing = walk there + do it ----------
+   reachList(all) = every thing you could do now: {at {x, y}, k (talk · quest · handin · shop · rest · open · look · pet · give · shake · knock · forge · board · go), name, run, r (reach), pri}
+   from the page (people · the inn · Pudding · critters) + AvateerVillage.targets() + AvateerPets.targets(). The nearest in its reach (≤ 1.6 tiles) = G.reach → the petal's word + a soft ring + its name. */
+const ACT_IC = {talk: '💬', quest: '❗', handin: '✅', shop: '🛒', rest: '🛏️', open: '📦', look: '🔍', pet: '🐾', give: '🎁', shake: '🌳', knock: '⛏️', forge: '⚒️', board: '📋', go: '🚶', pud: '🐘', call: '🐘'};   /* 🐘 av-pet2: 🐘 Ask (Pudding) · 🐘 Call (him from home) */
+function pname(id){ const p = Story.person(Story.rid(id)) || Story.person(id) || {}; return (G.lang === 'th' && p.th) || p.name || id; }
+function reachList(){ const out = [], add = o => { if(o && o.at) out.push(o); }; if(!G.ST || !G.W) return out; const s = G.save;
+  G.people.forEach(p => { if(p.hidden) return; const m = G.ST.markerFor(p.pid), daily = m && m.kind === 'daily';
+    let k = m && m.state === 'turnin' ? 'handin' : m && m.state === 'open' && !daily ? 'quest' : 'talk';
+    if(k === 'talk' && VIL && VIL.placeKind){ const pk = VIL.placeKind(p.id); if(pk) k = pk; }
+    add({at: p, k, name: pname(p.id), run: () => talkTo(p.id), pri: k === 'talk' ? 0 : 1}); });
+  if(stepIs(4)){ const inn = G.W.spot('inn'); if(inn) add({at: inn, k: 'rest', name: G.lang === 'th' ? 'โรงเตี๊ยม' : 'The inn', run: () => G.ST.event({do: 'go', what: 'inn'}), pri: 3, r: 1.9}); }
+  if(G.P && G.P.on){ const pud = {at: G.P, k: 'pet', name: pname('pudding'), run: () => { pAct('hug', {again: true}); pudSays('♥'); sound('pop'); }, pri: -1, fallback: true};   /* she is always next to you: only when nothing else is in reach */
+    if(qStep('il1.m2') === 1) Object.assign(pud, {k: 'talk', run: () => talkP('t.il1.m2.step2').then(() => { G.ST.event({do: 'talk', who: 'avateer.pudding'}); }), pri: 3, fallback: false});
+    add(pud); }
+  G.critters.forEach(c => add({at: c, k: 'look', name: c.id === 'kaikai' ? 'Kaikai' : c.id === 'paddypinch' ? 'Paddypinch' : c.id, run: () => { const p = G.V.toScreen(c.it.x, c.it.y, c.it.z); sticker(p.x, p.y - 50 * G.V.zoom, w(c.say)); sound('pop'); }, pri: -2}));
+  if(VIL && VIL.targets) VIL.targets().forEach(add); if(PETS && PETS.targets) PETS.targets().forEach(add);
+  return out; }
+function pickReach(){ const H = G.H; let b = null, bs = 1e9, fb = null; reachList().forEach(o => { const d = Math.hypot(o.at.x - H.x, o.at.y - H.y), r = o.r || 1.6; if(d > r) return; if(o.fallback){ fb = fb || o; return; } const sc = d - (o.pri || 0) * 0.4; if(sc < bs){ bs = sc; b = o; } }); return b || fb; }
+const isDesk = () => { try { return matchMedia('(hover: hover) and (pointer: fine)').matches; } catch(e){ return false; } };
+function keyCap(b, k){ if(!b || !isDesk()) return; const nm = b.querySelector('.nm'); if(nm && !nm.querySelector('.kc')){ const i = document.createElement('b'); i.className = 'kc'; i.textContent = k; nm.appendChild(i); } }
+function actLabel(t){ const b = $('b-act'); if(!b) return; const ic = b.querySelector('.ic'), nm = b.querySelector('.nm'), key = t ? t.k : '';
+  if(b.__k === key) return; b.__k = key; if(ic) ic.textContent = t ? ACT_IC[t.k] || '✋' : '✋';
+  if(nm){ nm.textContent = t ? w('a_' + t.k) : w('act'); keyCap(b, 'E'); }
+  b.classList.toggle('int-on', !!t); b.classList.toggle('int-off', !t); b.setAttribute('aria-label', t ? w('a_' + t.k) + ' · ' + t.name : w('act')); }
+/* ⏱️ 10 × a second: what is in reach (✋) + is a monster in reach (⚔️) */
+function stepInt(dt){ G.intT = (G.intT || 0) - dt; if(G.intT > 0) return; G.intT = 0.1;
+  const busy = G.talking || G.battle || G.arr || G.reveal || (G.J && G.J.on); G.reach = busy ? null : pickReach(); actLabel(G.reach);
+  const m = busy || !G.save.job ? null : fightTarget(); G.fightNear = m; const sw = $('b-swing'); if(sw) sw.classList.toggle('int-on', !!m && m.tag !== 'T'); }
+function interactPress(){ if(G.talking || G.battle || G.arr) return; closeEmotes(); const t = G.reach || pickReach();
+  if(!t){ toast(w('nothing'), 1800); sound('nope'); const b = $('b-act'); if(b){ b.classList.remove('int-no'); void b.offsetWidth; b.classList.add('int-no'); } return; }
+  G.flags['int.used'] = 1; G.H.stop(); if(t.at) G.H.dir = t.at.x >= G.H.x ? 1 : -1; sound('tap'); G.reach = null; G.intT = 0.4; actLabel(null); t.run(); }
+/* 👆 a tap on a thing on the map (not only people): walk next to it, then do it */
+function tapThing(x, y){ let b = null, bd = 1.25; reachList().forEach(o => { const d = Math.hypot(o.at.x - x, o.at.y - y); if(d < bd){ bd = d; b = o; } }); if(!b) return false;
+  const s = G.W.freeNear(b.at.x + (G.H.x < b.at.x ? -0.9 : 0.9), b.at.y + 0.3, 2); G.H.to(s.x, s.y).then(ok => { const r = (b.r || 1.6) + 0.4; if((ok || true) && Math.hypot(b.at.x - G.H.x, b.at.y - G.H.y) < r && !G.talking && !G.battle){ G.flags['int.used'] = 1; G.H.dir = b.at.x >= G.H.x ? 1 : -1; b.run(); } }); return true; }
+/* 🎯 the soft ring under what ✋ would do (gold) / the monster ⚔️ would fight (red) + its name over it */
+function reachFx(g, V){ const t = G.reach, m = G.fightNear; if(G.talking || G.battle) return;
+  const one = (o, col) => { const at = o.it || o.at || o, x = at.x, y = at.y, p = V.toScreen(x, y, G.W.M.heightAt(Math.floor(x), Math.floor(y))), k = V.zoom, r = (15 + Math.sin(G.t * 4) * 1.5) * k;
+    g.save(); g.globalAlpha = 0.75; g.strokeStyle = col; g.lineWidth = 3 * k; g.setLineDash([7 * k, 5 * k]); g.lineDashOffset = -G.t * 18 * k; g.beginPath(); g.ellipse(p.x, p.y, r * 1.5, r * 0.55, 0, 0, 7); g.stroke(); g.restore(); };
+  if(t) one(t.at, '#FFD23F'); if(m && m.tag !== 'T') one(m, '#FF6B5B'); }
+function reachName(g, V){ const t = G.reach; if(!t || !t.name || G.talking || G.battle) return; const at = t.at.it || t.at, p = V.toScreen(at.x, at.y, at.z != null ? at.z : G.W.M.heightAt(Math.floor(at.x), Math.floor(at.y))), k = V.zoom;
+  const txt = (ACT_IC[t.k] || '✋') + ' ' + t.name, fs = Math.round(Math.max(12, Math.min(17, 15 * k))); g.save(); g.font = '800 ' + fs + 'px Fredoka, Nunito, sans-serif'; const tw = g.measureText(txt).width, y = p.y + 18 * k;
+  g.fillStyle = 'rgba(30,36,60,.78)'; const x0 = p.x - tw / 2 - 8, h = fs + 8; g.beginPath(); if(g.roundRect) g.roundRect(x0, y, tw + 16, h, h / 2); else g.rect(x0, y, tw + 16, h); g.fill();
+  g.fillStyle = '#FFF'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, p.x, y + h / 2 + 1); g.restore(); }
 
 /* ---------- 🔑 av-s1c: the village (AvateerVillage) gets the page's helpers once ---------- */
 let VIL = null, PETS = null;   /* 🐾 av-pet1: AvateerPets glue */
@@ -527,33 +593,33 @@ function step(dt){ if(!G.ready || G.battle) return; G.playSec += dt; stepS1b(dt)
   G.P.step(dt); if(G.act && G.act.run.done) G.act = null;
   G.footT -= dt; if(G.footT <= 0){ G.footT = 0.5; footsteps(); }
   if(G.arr) arrStep(dt); noiBackStep(dt);   /* 🛶 av-boat */
-  watch(dt); }
+  watch(dt); stepInt(dt); }   /* ✋ av-int1 */
 function watch(dt){ if(G.talking || !G.ST) return; const H = G.H, z = G.W.zoneAt(H.x, H.y);
-  /* auto-talk: a person with a NEW quest or a talk step, when you stop next to them */
-  G.people.forEach(p => { const d = Math.hypot(p.x - H.x, p.y - H.y), m = G.ST.markerFor(p.pid); if(d < 1.5 && !H.moving && !G.J.on && m && (m.state === 'open' || m.state === 'turnin') && !(m.kind === 'daily' && m.state === 'open') && G.t - (G.lastTalk[p.pid] || -99) > 2.5) talkTo(p.id); });   /* 📅 a daily's new mark waits for a tap (or the 📋 board) */
+  /* ✋ av-int1 (Aowu 16:40 · Q9 ⭐ A): no auto-talk any more — a person's ❗ / ✅ waits for the ✋ button (E) or a tap on them */
   /* 🌉 av-s2a: the rope bridge north is shut until the camps open (S2a-2) */
   if(G.W.locked && G.W.locked(H.x, H.y, 1.4) && G.t - (G.soonT || -99) > 6){ G.soonT = G.t; toast(w('soonCamps'), 2600); sound('nope'); }
   /* 🌟 av-s2a: the first time you step onto an islet → its card + a look at its main attraction · near it once = no more shimmer */
   const mk = G.W.marks && G.W.marks[z]; if(mk && !G.flags['seen.isle.' + z] && !G.intro && G.ST.status('il1.m1') !== 'open' && !G.J.on && !G.battle){ isleReveal(z, mk); return; }
   Object.keys(G.W.marks || {}).forEach(k => { const m = G.W.marks[k]; if(!G.flags['seen.mark.' + k] && Math.hypot(m.x - H.x, m.y - H.y) < 3.2){ G.flags['seen.mark.' + k] = 1; saveLocal(); } });
   /* step ⑤ go inn */
-  if(stepIs(4)){ const s = G.W.spot('inn'); if(Math.hypot(s.x - H.x, s.y - H.y) < 1.3) G.ST.event({do: 'go', what: 'inn'}); }
+  /* (✋ av-int1: the inn's 🛏️ Rest is a ✋ target now — see reachList) */
   /* 🥭 islets */
   if(z === 'mango' && !G.flags['seen.mango']){ G.flags['seen.mango'] = 1; pAct('cheer', {again: true}); setTimeout(() => pudSays(w('yay')), 200); updateGoal(); saveLocal(); }
   const pond = G.W.spot('pond'), stream = G.W.spot('stream');
   if(pond && Math.hypot(pond.x - G.P.x, pond.y - G.P.y) < 2.4 && !G.near.pond){ G.near.pond = 1; pAct('splash', {again: true}); } else if(pond && Math.hypot(pond.x - G.P.x, pond.y - G.P.y) > 4) G.near.pond = 0;
   if(stream && Math.hypot(stream.x - G.P.x, stream.y - G.P.y) < 2.6 && !G.near.stream){ G.near.stream = 1; pAct('scared', {again: true}); setTimeout(() => pudSays(w('tooDeep')), 250); } else if(stream && Math.hypot(stream.x - G.P.x, stream.y - G.P.y) > 5) G.near.stream = 0;
   /* 🐘 she toots now and then (off-key — it makes everyone laugh) */
-  G.tootT -= dt; if(G.tootT <= 0){ G.tootT = 14 + Math.random() * 12; if(G.P.on && !G.pact && !G.P.moving) pAct('toot', {on: () => { tootSound(); pudSays(w('toot')); }}); }
+  G.tootT -= dt; if(G.tootT <= 0 && !(PETS && PETS.fr)){   /* 🐘 av-pet2: Pudding's idle set (sniff · flap · toot · lean) lives in AvateerPets now */ G.tootT = 14 + Math.random() * 12; if(G.P.on && !G.pact && !G.P.moving) pAct('toot', {on: () => { tootSound(); pudSays(w('toot')); }}); }
   /* a device copy every 20 s of play */
   G.saveT += dt; if(G.saveT > 20){ G.saveT = 0; saveLocal(); } }
 function render(alpha, t){ G.t = t; const H = G.H, P = G.P, lerp = (a, b) => a + (b - a) * alpha;
-  H.it.x = lerp(H.px, H.x); H.it.y = lerp(H.py, H.y); H.it.z = H.z; P.it.x = lerp(P.px, P.x); P.it.y = lerp(P.py, P.y); P.it.z = P.z; if(G.Q){ G.Q.it.x = lerp(G.Q.px, G.Q.x); G.Q.it.y = lerp(G.Q.py, G.Q.y); G.Q.it.z = G.Q.z; }
-  try { Props.tick(G.W.items, t); Props.seeThrough(G.V, G.W.items, [H.it, P.it].concat(G.Q ? [G.Q.it] : [])); } catch(e){}
+  H.it.x = lerp(H.px, H.x); H.it.y = lerp(H.py, H.y); H.it.z = H.z; P.it.x = lerp(P.px, P.x); P.it.y = lerp(P.py, P.y); P.it.z = P.z; if(G.Q){ G.Q.it.x = lerp(G.Q.px, G.Q.x); G.Q.it.y = lerp(G.Q.py, G.Q.y); G.Q.it.z = G.Q.z; } if(G.Q2){ G.Q2.it.x = lerp(G.Q2.px, G.Q2.x); G.Q2.it.y = lerp(G.Q2.py, G.Q2.y); G.Q2.it.z = G.Q2.z; }
+  try { Props.tick(G.W.items, t); Props.seeThrough(G.V, G.W.items, [H.it, P.it].concat(G.Q ? [G.Q.it] : [], G.Q2 ? [G.Q2.it] : [])); } catch(e){}
   Iso.frame(G.V, {items: G.items, t, groundFx: groundFx, airFx: airFx}); if(PETS) PETS.frame();
   guide(); }
-function groundFx(g, V){ if(G.foot && Iso.footsteps) try { Iso.footsteps(g, [{x: G.H.x, y: G.H.y}].concat(G.foot), (x, y) => V.toScreen(x, y, G.W.M.heightAt(Math.floor(x), Math.floor(y))), {t: G.t, col: 'rgba(255,178,26,.9)', pulse: !calm, size: 3.6 * V.zoom}); } catch(e){} }
+function groundFx(g, V){ reachFx(g, V); if(PETS && PETS.groundFx) PETS.groundFx(g, V);   /* 🔥 av-pet2: the gimmick spots */ if(G.foot && Iso.footsteps) try { Iso.footsteps(g, [{x: G.H.x, y: G.H.y}].concat(G.foot), (x, y) => V.toScreen(x, y, G.W.M.heightAt(Math.floor(x), Math.floor(y))), {t: G.t, col: 'rgba(255,178,26,.9)', pulse: !calm, size: 3.6 * V.zoom}); } catch(e){} }
 function airFx(g, V){ const q = G.hint, J = G.J; if(G.arr) arrClouds(g, V);   /* 🛶 av-boat */
+  reachName(g, V);   /* ✋ av-int1 */ if(PETS && PETS.airFx) PETS.airFx(g, V);   /* 💦 av-pet2 */
   Object.keys(G.W.marks || {}).forEach(k => { const m = G.W.marks[k]; if(G.flags['seen.mark.' + k]) return; [m].concat(m.also || []).forEach((o, n) => { const x = n ? o.x + 0.5 : o.x, y = n ? o.y + 0.5 : o.y, p = V.toScreen(x, y, G.W.M.heightAt(Math.floor(x), Math.floor(y))); AvWorld.sparkle(g, p.x, p.y - (n ? 70 : m.big ? 150 : 95) * V.zoom, V.zoom * 1.4, G.t + n); }); });   /* 🌟 av-s2a: the main attraction shimmers until you've been close */
   G.W.gates.forEach(it => { if(it.touchFx){ const p = (G.t - it.touchFx.t0) / (Props.TOUCH_MS / 1000); if(!Props.touchFx(g, V, it, p)) it.touchFx = null; } });
   if(q && q.gate){ const n = J.on && J.on === q.gate ? J.next() : 1; if(n > 0) Props.hopHint(g, V, q.gate, n, G.t); }
@@ -563,6 +629,7 @@ function airFx(g, V){ const q = G.hint, J = G.J; if(G.arr) arrClouds(g, V);   /*
 function controls(){
   G.V.onTap = cell => { if(!cell || G.talking) return; closeEmotes(); const x = cell.i + 0.5, y = cell.j + 0.5, p = G.people.find(q => Math.hypot(q.x - x, q.y - y) < 1.2);
     if(p){ const s = G.W.freeNear(p.x + (G.H.x < p.x ? -0.9 : 0.9), p.y + 0.3, 2); G.H.to(s.x, s.y).then(ok => { if(ok || Math.hypot(p.x - G.H.x, p.y - G.H.y) < 2) talkTo(p.id); }); return; }
+    if(tapThing(x, y)) return;   /* ✋ av-int1: a tap on a chest · Pudding · a tree … = walk there + do it */
     G.H.to(x, y); };
   const st = $('stick'), kn = st.querySelector('.knob'), T = UI.stickTracker(st, {player: CURRENT_PLAYER}); let on = null;
   const move = v => { const m = Math.min(1, v.m); kn.style.transform = 'translate(' + (v.fx * 30) + '%,' + (v.fy * 30) + '%)';
@@ -570,10 +637,11 @@ function controls(){
   st.addEventListener('pointerdown', e => { if(G.talking) return; closeEmotes(); on = e.pointerId; st.setPointerCapture(e.pointerId); move(T.start(e)); e.preventDefault(); });
   UI.onFastMove(st, e => { if(e.pointerId === on) move(T.at(e)); });
   const up = e => { if(e.pointerId !== on) return; on = null; G.H.vx = G.H.vy = 0; kn.style.transform = ''; }; st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up);
+  if(UI.stickZone) UI.stickZone(st, null);   // 🕹️ 24js-r: the shared stick zone — lands under the thumb (off the edges + home bar), follows a little past the rim, 👆 on a lost touch
   const press = (b, fn) => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if(!G.talking) fn(); });
-  press($('b-jump'), jumpPress); press($('b-emote'), openEmotes); press($('b-swing'), swingPress);
+  press($('b-jump'), jumpPress); press($('b-emote'), openEmotes); press($('b-swing'), swingPress); press($('b-act'), interactPress);   /* ✋ av-int1 */
   $('b-lang').onclick = () => { setLang(G.lang === 'th' ? 'en' : 'th'); saveLocal(); };
-  addEventListener('keydown', e => { if(G.talking || G.battle || e.repeat || e.target.tagName === 'INPUT') return; if(e.code === 'Space'){ jumpPress(); e.preventDefault(); } if(e.code === 'KeyE') openEmotes(); if(e.code === 'KeyF') swingPress(); });
+  addEventListener('keydown', e => { if(G.talking || G.battle || e.repeat || e.target.tagName === 'INPUT') return; if(e.code === 'Space'){ jumpPress(); e.preventDefault(); } if(e.code === 'KeyE'){ interactPress(); e.preventDefault(); } if(e.code === 'KeyQ') openEmotes(); if(e.code === 'KeyF') swingPress(); });   /* ✋ av-int1: E interact · Q emote · F fight · Space jump */
   const keys = {}; const kv = () => { const x = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0), y = (keys.ArrowDown || keys.KeyS ? 1 : 0) - (keys.ArrowUp || keys.KeyW ? 1 : 0);
     if(!x && !y){ if(on == null){ G.H.vx = G.H.vy = 0; } return; } const wx = x / 2 + y, wy = y - x / 2, L = Math.hypot(wx, wy); G.H.vx = wx / L; G.H.vy = wy / L; };
   addEventListener('keydown', e => { if(e.target.tagName === 'INPUT') return; if(/^(Arrow|Key[WASD])/.test(e.code)){ keys[e.code] = 1; if(!G.talking) kv(); } }); addEventListener('keyup', e => { if(keys[e.code]){ delete keys[e.code]; kv(); } });
@@ -599,6 +667,8 @@ function fpsTaps(){ const b = $('lv'); if(!b) return; let taps = [], q = new URL
     if(taps.length >= 5){ taps = []; fpsMeter(!G.fpsOn); toast(G.fpsOn ? (th ? '🐢 เปิดมาตรวัดความเร็วแล้ว — แตะ Lv 5 ครั้งเพื่อปิด' : '🐢 Speed meter ON — tap Lv 5× again to hide') : (th ? '🐢 ปิดมาตรวัดความเร็วแล้ว' : '🐢 Speed meter off'), 2600); }
     else if(taps.length >= 3){ const n = 5 - taps.length; toast(th ? '🐢 แตะอีก ' + n + ' ครั้ง → มาตรวัดความเร็ว' : '🐢 ' + n + ' more tap' + (n > 1 ? 's' : '') + ' → speed meter', 1400); } }); }
 function dressPads(){ UI.pad.dress($('b-jump'), '🦘', w('jump'), '#22A867', true); UI.pad.dress($('b-emote'), '🎭', w('emote'), '#9B5DE5'); UI.pad.dress($('b-swing'), '⚔️', w('fight'), G.save && G.save.job ? '#FF6B5B' : '#AEB6C2');
+  UI.pad.dress($('b-act'), '✋', w('act'), '#FFC21A'); $('b-act').__k = null; actLabel(G.reach || null);   /* ✋ av-int1 */
+  keyCap($('b-jump'), '␣'); keyCap($('b-emote'), 'Q'); keyCap($('b-swing'), 'F'); keyCap($('b-act'), 'E');
   $('b-swing').classList.toggle('locked', !(G.save && G.save.job));   /* av-s1c: the ⚔️ petal unlocks once you have a weapon (it kept the S1a 🔒) */
   if(G.padReady) layoutPads(); }   /* av-s1b2: UI.pad.dress rewrites the button → the 🌸 petal shape (the only part you can tap) must be laid out again */
 function layoutPads(){ const top = $('top'), nav = topNav(); top.style.paddingLeft = '';   /* the 🧭 nav group (UI.navBar) sits out of the flow — the 📖 tracker starts after it */
@@ -606,7 +676,7 @@ function layoutPads(){ const top = $('top'), nav = topNav(); top.style.paddingLe
   /* 📖 the tracker gets its own row under the top buttons when the row is too tight (phones upright) */
   const trk = $('trk'); trk.classList.remove('row2'); const rr = $('right').getBoundingClientRect(), tl = top.getBoundingClientRect().left + (parseFloat(top.style.paddingLeft) || 0);
   if(rr.left - tl - 16 < 220){ trk.classList.add('row2'); trk.style.top = Math.round(Math.max(rr.bottom, nav ? nav.getBoundingClientRect().bottom : 0) + 6) + 'px'; } else trk.style.top = '';
-  const box = $('btns'); UI.pad.petals(box, $('b-jump'), [$('b-emote'), $('b-swing')], {fit: true});
+  const box = $('btns'); UI.pad.petals(box, $('b-jump'), [$('b-act'), $('b-swing'), $('b-emote')], {fit: true});   /* ✋ av-int1: ↖ ⚔️ Fight (top) · ← ✋ (middle, the easiest thumb roll) · ↙ 🎭 Emote (lower) — UiKit petal slots 1 · 2 · 3 */
   const st = $('stick'); st.style.width = st.style.height = ''; const sr = st.getBoundingClientRect(), left = Math.min(...[...box.querySelectorAll('button')].filter(x => x.offsetParent).map(x => x.getBoundingClientRect().left));
   if(left - sr.left - 18 < sr.width) st.style.width = st.style.height = Math.max(104, Math.round(left - sr.left - 18)) + 'px';
   $('toast').style.bottom = Math.round(innerHeight - Math.min(st.getBoundingClientRect().top, box.getBoundingClientRect().top) + 10) + 'px';
@@ -623,14 +693,24 @@ function camPad(){ if(!G.V) return; const top = $('top'), trk = $('trk'), goal =
 const LW = (window.LootWear && window.Loot) ? {bag: null, look: {}} : null;
 function lwKey(k){ return 'sp_avateer_' + k + ':' + (CURRENT_PLAYER || 'guest'); }
 function lwSave(){ try { localStorage.setItem(lwKey('bag'), JSON.stringify(LW.bag.toJSON())); localStorage.setItem(lwKey('look'), JSON.stringify(LW.look)); } catch(e){} }
+/* 🧍 av-bag1: what the paper doll needs from the game — weapons from your job · 2 pet slots · stat pills */
+function dollOpts(){ const s = G.save, J = s && s.job ? JOB() : null, set = J ? (curSets()[s.set || 0] || curSets()[0]) : null;
+  const wpn = (id, nm) => id && window.AvWeapons ? {name: nm, pic: (g, w, h) => AvWeapons.fit(g, AvWeapons.idx(id, 0), w * 0.1, h * 0.1, w * 0.8, h * 0.8, {pair: false})} : null;
+  return {arm: av => { if(!set || !window.AvWeapons) return av; try { return AvWeapons.arm(av, AvWeapons.design(AvWeapons.idx(set[0], 0)), set[1] ? AvWeapons.design(AvWeapons.idx(set[1], 0)) : null); } catch(e){ return av; } },
+    weapon: sl => !set ? null : sl === 'hand' ? wpn(set[0], (AvWeapons.info(AvWeapons.idx(set[0], 0)) || {}).name || 'Weapon') : sl === 'off' && set[1] ? wpn(set[1], (AvWeapons.info(AvWeapons.idx(set[1], 0)) || {}).name || 'Off hand') : null,
+    pets: {slots: [s.pet || null, s.pet2 || null], list: petList(), labels: G.lang === 'th' ? ['เพื่อน 1', 'เพื่อน 2'] : ['Friend 1', 'Friend 2'],   /* 🐾 av-pet2: My 2 friends (they walk + battle) + 🐘 the Pudding switch */
+      pud: PETS && PETS.pudCan && PETS.pudCan() ? {on: !s.pudHome, th: G.lang === 'th', pic: (g, n) => { try { Creatures.draw(g, 'pudding', n / 2, n * 0.9, n * 0.78, {view: 'SW', t: 0.3}); } catch(e){} }, set: v => PETS.pudHome(!v)} : null,
+      pic: (g, id, n) => { try { Creatures.drawFor(g, id, n / 2, n * 0.94, n * 1.15, {t: 0.3}); } catch(e){} },
+      pick: (k, id) => { if(k === 0){ if(!id) return; s.pet = id; if(s.pet2 === id) s.pet2 = null; } else s.pet2 = id || null; petsRefresh(); saveLocal(); }},
+    stats: () => { const st = window.AvBattle ? AvBattle.statsFor('hero', s.lv || 1) : {}; return [['⚔️', st.pw], ['🛡️', st.gd], ['👟', st.sp], ['❤️', st.hp], ['🍀', st.lk], ['⭐', 'Lv ' + (s.lv || 1)]].filter(x => x[1] != null); }}; }
 function lwStart(){ if(!LW){ $('b-bag').classList.add('hidden'); G.redress = () => { G.heroDressed = lookAv(); armHero(); }; G.redress(); return; } let s = null, l = null; try { s = JSON.parse(localStorage.getItem(lwKey('bag')) || 'null'); l = JSON.parse(localStorage.getItem(lwKey('look')) || 'null'); } catch(e){}
   LW.bag = Loot.bag(s || {}); LW.look = l || {};
   if(!s){ ['head', 'body', 'feet'].forEach((sl, i) => { LW.bag.add({base: 'wear.isl.jungle.' + sl, tier: 0, lv: 1, seed: 11 + i, sock: 0, runes: []}); LW.bag.wear(LW.bag.g.length - 1, sl); }); lwSave(); }
   const dress = () => { try { G.heroDressed = LootWear.dressFor(lookAv(), LW.bag, LW.look); } catch(e){ G.heroDressed = lookAv(); } armHero(); }; dress(); G.redress = dress;
   $('b-bag').onclick = () => { if(G.talking) return; if(Loot.react) Loot.react(); document.body.classList.add('lw-open');
-    LootWear.bagSheet($('scr-play'), LW.bag, {av: G.heroBase, look: LW.look, jobs: {}, theme: 'gold', basic: true,
+    LootWear.bagSheet($('scr-play'), LW.bag, {av: G.heroBase, look: LW.look, jobs: {}, theme: 'gold', basic: true, ...dollOpts(),
       onLook: l => { LW.look = l; dress(); lwSave(); }, onChange: () => { dress(); lwSave(); }, onClose: () => document.body.classList.remove('lw-open')}); }; }
 
-window.AVATEER = {pets: () => PETS, petFollow, placePeople, spawnWin, syncSpawns, isleReveal, G, WORDS, setLang, talkTo, jumpPress, doEmote, openEmotes, cleanName, okName, saveLocal, saveServer, snapshot, goalNow, stepIs, fight, swingPress, gainXp, xpNeed, qStep, village: () => VIL, bag: () => LW ? LW.bag : null};
+window.AVATEER = {interactPress, reachList, pickReach, heroMove, fightTarget, reach: () => G.reach, setMob, dropMob, pets: () => PETS, petFollow, placePeople, spawnWin, syncSpawns, isleReveal, G, WORDS, setLang, talkTo, jumpPress, doEmote, openEmotes, cleanName, okName, saveLocal, saveServer, snapshot, goalNow, stepIs, fight, swingPress, phoneCap, gainXp, xpNeed, qStep, village: () => VIL, bag: () => LW ? LW.bag : null};
 boot().catch(e => { if(window.console) console.error(e); $('load-text').textContent = '⚠️ ' + (e && e.message || e); });
 })();

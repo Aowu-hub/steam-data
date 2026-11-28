@@ -21,7 +21,7 @@
 (function(){
 'use strict';
 if(typeof window === 'undefined' || !window.Loot || !window.AvatarWear){ if(typeof console !== 'undefined') console.warn('LootWear needs LootKit + AvatarWear first'); return; }
-const L = window.Loot, A = window.AvatarWear, VERSION = 'av-wear4', TAU = Math.PI * 2;
+const L = window.Loot, A = window.AvatarWear, VERSION = 'av-bag1', TAU = Math.PI * 2;
 const BEAM = (function(){
 const TAU = Math.PI * 2;
 const LIFE = [0.4, 0.55, 0.65, 0.8, 1.05, 1.15, 1.9, 2.2];   // ⚪ 🟢 🔵 🟣 🟡 🌈 ☀️ ✦
@@ -320,6 +320,160 @@ function lookTab(box, ctx){ css(); const o = ctx.o, B = ctx.B, look = o.look || 
   function changed(act){ const copy = Object.assign({}, look); if(o.onLook) o.onLook(copy); stg.set(avNow(), act); slots(); row(); grid(); }
   function all(){ slots(); row(); fit(); grid(); const sd = $('.lw-side'); if(sd.scrollHeight > sd.clientHeight + 1){ root.classList.add('tight'); grid(); } }
   all(); }
+/* ---------------- 🧍 av-bag1: Gear + Look in ONE screen — the paper doll (🧳 Avateer Development chat, 2026-11-28 · look test av-bag1p v1 → v4, Aowu 15:17 "ok") ----------------
+   The bag's FIRST tab is a ⚔️ Gear | 👗 Look switch (tap it again = switch). Your traveller in the middle; every slot is a card with a dashed line to its body part:
+   upright phones = one column a side (🎩 Head · 👕 Body · 🛡️ Off hand · 👟 Feet | 🎒 Back · 📿 Charm · 💍 Charm 2 · 🗡️ Weapon) · sideways / tablets / computers = Aowu's 14:59 sketch
+   (2 × 2 a side, zig-zag: inner Head / Off hand + Back / Weapon reach the top + bottom, outer Body / Feet + Charm / Charm 2 sit in between).
+   Tap a slot → the bag grid sorts itself to it (fits first, best rarity first, the rest faded) · tap a fitting thing = wear it (▲ better · ⇄ swap) · tap what you wear = its full card
+   (🔒 · 🪙 · ♻️ — the classic 🎒 view, also behind "🎒 All") · 👗 Look = the 5 look slots, the grid = every look you own + ⚙️ my gear + 🙈 hide · 🐾 2 pet slots + power pills in a gold strip
+   · 🙈 Hide = just you, big. Options the game passes: o.av · o.look · o.onLook · o.onChange · o.arm(av) (weapons in hand) · o.weapon(slot) → {name, pic(g, w, h)} for 🗡️ / 🛡️ from the job
+   · o.pets = {slots: [id|null, id|null], list: [{id, name}], pic(g, id, size), pick(k, id), labels?: [2 names] (av-pet2), pud?: {on, th, pic(g, n), set(on)} = 🐘 the Pudding switch (av-pet2)} · o.stats() → [[icon, text], …]. o.doll === false keeps the old tabs. */
+const ME_SLOTS = [
+  {s: 'head', ic: '🎩', n: 'Head',     at: [0.40, 0.13], side: 'L'},
+  {s: 'body', ic: '👕', n: 'Body',     at: [0.30, 0.50], side: 'L'},
+  {s: 'off',  ic: '🛡️', n: 'Off hand', at: [0.12, 0.63], side: 'L'},
+  {s: 'feet', ic: '👟', n: 'Feet',     at: [0.36, 0.95], side: 'L'},
+  {s: 'back', ic: '🎒', n: 'Back',     at: [0.80, 0.28], side: 'R'},
+  {s: 'acc',  ic: '📿', n: 'Charm',    at: [0.58, 0.37], side: 'R'},
+  {s: 'acc2', ic: '💍', n: 'Charm 2',  at: [0.66, 0.56], side: 'R'},
+  {s: 'hand', ic: '🗡️', n: 'Weapon',   at: [0.90, 0.64], side: 'R'}];
+const ME_Z = {head: [0, 0], off: [0, 1], body: [1, 0], feet: [1, 1], back: [0, 0], hand: [0, 1], acc: [1, 0], acc2: [1, 1]};   // [inner 0 / outer 1, top 0 / bottom 1]
+const ME_TH = {gear: {ic: '⚔️', w: 'Gear'}, look: {ic: '👗', w: 'Look'}};
+function meCss(){ if(document.getElementById('lw-me-css')) return; const st = document.createElement('style'); st.id = 'lw-me-css'; st.textContent = [
+  '.lk-tab.lk-lead{grid-column:span 2;padding:3px !important;background:#F4F8FF !important;} .lk-short .lk-tab.lk-lead{grid-column:span 3;}',
+  '.me-lr{display:flex;width:100%;height:100%;gap:3px;} .me-lr .h{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:13px;color:#8A97AD;transition:background .2s,color .2s;}',
+  '.me-lr .h b{font-size:26px;line-height:1;filter:grayscale(.85) opacity(.55);transition:font-size .15s;} .me-lr .h em{font-style:normal;font-weight:800;font-size:13px;line-height:1.1;white-space:nowrap;}',
+  '.me-lr .h.on{color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35);} .me-lr .h.on b{filter:none;font-size:30px;}',
+  '.me-lr .h.g.on{background:linear-gradient(#8FD6F5,#7A8CF0 55%,#9B5DE5);box-shadow:0 3px 0 #6234B0,inset 0 2px 0 rgba(255,255,255,.4);} .me-lr .h.l.on{background:linear-gradient(#FFB3D9,#FF7AB8 55%,#E2508F);box-shadow:0 3px 0 #A8306A,inset 0 2px 0 rgba(255,255,255,.4);}',
+  '.lk-short .me-lr .h{flex-direction:row;gap:5px;} .lk-short .me-lr .h b{font-size:21px;} .lk-short .me-lr .h.on b{font-size:23px;} .lk-short .me-lr .h em{font-size:12.5px;}',
+  '.me{position:absolute;inset:0;display:flex;gap:10px;font-family:Fredoka,Nunito,sans-serif;color:#1F3B5C;} .me.up{flex-direction:column;} .me-col{display:flex;flex-direction:column;gap:8px;flex:0 0 auto;}',
+  '.me-doll{position:relative;flex:0 0 auto;border-radius:20px;background:radial-gradient(ellipse at 50% 38%,#FFFFFF 0%,#E4F4FF 55%,#C9E6FA 100%);box-shadow:inset 0 0 0 2px rgba(143,214,245,.7);overflow:hidden;}',
+  '.me-doll.look{background:radial-gradient(ellipse at 50% 38%,#FFFFFF 0%,#FFEAF4 55%,#F8D2E6 100%);box-shadow:inset 0 0 0 2px rgba(240,150,200,.6);}',
+  '.me-doll canvas.av{position:absolute;} .me-doll svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}',
+  '.me-slot{position:absolute;z-index:2;display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;}',
+  '.me-card{position:relative;border-radius:14px;background:#fff;box-shadow:0 4px 0 rgba(31,78,121,.18),0 6px 12px rgba(31,78,121,.15);transition:transform .08s;}',
+  '.me-slot:active .me-card{transform:scale(.94);} .me-card canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:14px;}',
+  '.me-card.empty{background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 2.5px rgba(120,160,200,.5);}',
+  '.me-card.empty::after{content:attr(data-ic);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:var(--ic,24px);opacity:.38;filter:grayscale(1);}',
+  '.me-card.empty::before{content:"+";position:absolute;right:5px;bottom:1px;font:800 15px Fredoka;color:#7A9CC0;}',
+  '.me-card.sel{box-shadow:0 0 0 3px #FFC21A,0 0 0 6px rgba(255,194,26,.35),0 6px 14px rgba(200,130,0,.3);}',
+  '.me-card.pop{animation:mepop .4s cubic-bezier(.3,1.6,.5,1);} @keyframes mepop{0%{transform:scale(.8);}55%{transform:scale(1.1);}100%{transform:none;}}',
+  '.me-chip{position:absolute;left:-6px;top:-7px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 0 rgba(31,78,121,.25);display:flex;align-items:center;justify-content:center;font-size:14px;z-index:2;}',
+  '.me-mk{position:absolute;right:-6px;top:-7px;min-width:22px;height:22px;border-radius:11px;background:#FF7AB8;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 0 0 2px #fff;}',
+  '.me-lv{position:absolute;left:5px;bottom:4px;font:800 10.5px Fredoka;color:#fff;background:rgba(31,59,92,.72);padding:1px 5px;border-radius:7px;z-index:2;}',
+  '.me-lab{font-weight:800;font-size:12.5px;line-height:1;color:#35567A;background:rgba(255,255,255,.88);padding:2px 7px;border-radius:999px;white-space:nowrap;}',
+  '.me-strip{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:0 10px;border-radius:18px;background:linear-gradient(#FFF9EA,#FFEFC9);box-shadow:inset 0 0 0 2px #FFD98A;}',
+  '.me-strip .me-slot{position:relative;} .me-strip .me-lab{font-size:11.5px;} .me-card.pet{background:#FFF4D6;box-shadow:0 0 0 3px #FFC86B,0 4px 0 #D99A2B;} .me-card.pet.sel{box-shadow:0 0 0 3px #FFC21A,0 0 0 7px rgba(255,194,26,.45);}',
+  '.me-card.pet.pud{background:#EAF7E2;box-shadow:0 0 0 3px #8FD17A,0 4px 0 #4F9A3C;} .me-card.pet.pud.home{background:#ECE6F6;box-shadow:0 0 0 3px #B9A6E0,0 4px 0 #7D67B5;} .me-card.pet.pud.home canvas{opacity:.6;filter:grayscale(.35);}',
+  '.me-pows{flex:1 1 auto;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;} .me-pows span{background:#fff;border-radius:999px;padding:3px 9px;font-weight:800;font-size:12.5px;box-shadow:0 2px 0 #E8C77A;white-space:nowrap;} .me-pows.look span{box-shadow:0 2px 0 #F0B8D4;}',
+  '.me-eye{flex:0 0 auto;border:none;font:800 12.5px Fredoka;color:#1F4E79;padding:6px 11px;min-height:36px;border-radius:999px;background:linear-gradient(#fff,#EAF7FF 55%,#BFE6FA);box-shadow:0 3px 0 #7DB8DA;cursor:pointer;white-space:nowrap;}',
+  '.me-eye.on{color:#fff;background:linear-gradient(#8FD6F5,#7A8CF0 55%,#9B5DE5);box-shadow:0 3px 0 #6234B0;}',
+  '.me-bag{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:6px;}',
+  '.me-bag h4{margin:0;font-size:14px;display:flex;gap:6px;align-items:center;flex-wrap:nowrap;min-width:0;} .me-bag h4 small{font-weight:600;color:#5B6480;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}',
+  '.me-bag h4 button{border:none;font:800 13px Fredoka;background:#EAF4FF;color:#1F4E79;padding:4px 10px;min-height:32px;min-width:32px;box-shadow:0 2px 0 #B9D3EC;border-radius:999px;cursor:pointer;white-space:nowrap;flex:0 0 auto;} .me-bag h4 .me-all{margin-left:auto;} .me-bag h4 button[disabled]{opacity:.35;}',
+  '.lk-short .lk-head .lk-sp{flex:1 1 0 !important;} .me.small .me-pows span{font-size:11.5px;padding:2px 7px;} .me.small .me-lab{font-size:11px;} .me.small .me-eye{padding:5px 8px;font-size:11.5px;} .me.small .me-strip{gap:6px;padding:0 6px;}',
+  '.me-grid{display:grid;gap:6px;} .me-pg{display:flex;align-items:center;gap:4px;margin-left:auto;flex:0 0 auto;} .me-pg + .me-all{margin-left:6px;} .me-pg small{overflow:visible;}',
+  '.me-cell{position:relative;aspect-ratio:1;border:none;padding:0;border-radius:12px;background:rgba(143,214,245,.18);box-shadow:inset 0 0 0 1.5px rgba(143,214,245,.55);cursor:pointer;-webkit-tap-highlight-color:transparent;}',
+  '.me-cell:active{transform:scale(.93);} .me-cell canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:12px;} .me-cell.dim{opacity:.35;filter:grayscale(.5);}',
+  '.me-cell .ck{position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#4CC764;color:#fff;font:800 11px/18px Fredoka;text-align:center;box-shadow:0 0 0 2px #fff;}',
+  '.me-cell .up{position:absolute;left:3px;top:3px;min-width:18px;height:18px;border-radius:9px;background:#FF9F1A;color:#fff;font:800 11px/18px Fredoka;text-align:center;box-shadow:0 0 0 2px #fff;}',
+  '.me-cell .si{position:absolute;right:3px;bottom:2px;font-size:11px;} .me-cell .tx{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font:800 12px Fredoka;color:#35567A;gap:2px;} .me-cell .tx b{font-size:22px;}',
+  '.me-cell.on{box-shadow:0 0 0 3px #4CC764;}',
+  '.me-empty{grid-column:1/-1;font-size:13px;color:#5B6480;padding:10px;text-align:center;}'].join('\n'); document.head.appendChild(st); }
+const ME_FIT = new Map();
+function meBox(av){ const key = JSON.stringify(av.cw || {}) + JSON.stringify(av.eq || {}) + (av.hair || '') + (av.acc || ''); let b = ME_FIT.get(key); if(b) return b; const S = 600, c = document.createElement('canvas'); c.width = c.height = S; const q = c.getContext('2d');
+  try { drawAvatar(q, {av, dir: 1}, S / 2, S * 0.85, 4, {t: 0.4, still: true}); } catch(e){} const d = q.getImageData(0, 0, S, S).data; let x0 = S, y0 = S, x1 = 0, y1 = 0;
+  for(let y = 0; y < S; y += 2) for(let x = 0; x < S; x += 2) if(d[(y * S + x) * 4 + 3] > 10){ if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; }
+  if(x1 <= x0){ x0 = S / 2 - 60; x1 = S / 2 + 60; y0 = S * 0.85 - 320; y1 = S * 0.85 + 10; }
+  b = {w: (x1 - x0) / 4, top: (S * 0.85 - y0) / 4, bot: Math.max(0, (y1 - S * 0.85) / 4), cx: (x0 + x1) / 8 - S / 8}; if(ME_FIT.size > 40) ME_FIT.clear(); ME_FIT.set(key, b); return b; }
+const meDpr = () => Math.min(2, window.devicePixelRatio || 1);
+function meAv(cv, av, w, h){ const n = meDpr(); cv.width = Math.round(w * n); cv.height = Math.round(h * n); cv.style.width = w + 'px'; cv.style.height = h + 'px'; const g = cv.getContext('2d'); g.setTransform(n, 0, 0, n, 0, 0);
+  const b = meBox(av), k = Math.min(w * 0.62 / (b.w + 10), h * 0.86 / (b.top + b.bot + 6)), feet = h * 0.5 + (b.top - b.bot) * k / 2;
+  g.fillStyle = 'rgba(255,255,255,.8)'; g.beginPath(); g.ellipse(w / 2, feet + 2, b.w * k * 0.55, 7 * k, 0, 0, TAU); g.fill();
+  try { drawAvatar(g, {av, dir: 1}, w / 2 - b.cx * k, feet, k, {t: 0.4, still: true}); } catch(e){}
+  return {x0: w / 2 - b.w * k / 2, y0: feet - b.top * k, w: b.w * k, h: (b.top + b.bot) * k}; }
+function meCard(cv, it, px){ const n = Math.max(16, Math.round(px * meDpr())); cv.width = cv.height = n; const g = cv.getContext('2d'); try { L.card(g, it, 0, 0, n, n, 0.4, {shadow: false}); } catch(e){} }
+function meFn(cv, px, fn){ const n = Math.max(16, Math.round(px * meDpr())); cv.width = cv.height = n; const g = cv.getContext('2d'); g.clearRect(0, 0, n, n); try { fn(g, n); } catch(e){} }
+function meEl(tag, cls, html){ const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; }
+const meFits = (it, s) => { const d = slotOf(it); return d === s || (s === 'acc2' && d === 'acc') || (s === 'acc' && d === 'acc2'); };
+function meState(o){ return o.__me || (o.__me = {mode: 'gear', sel: 'head', hide: false, page: 0}); }
+function meTab(box, ctx){ css(); meCss(); const o = ctx.o, B = ctx.B, S = meState(o), look = o.look || (o.look = {}), mode = S.mode, petSel = /^pet/.test(S.sel);
+  if(mode === 'look' && LOOK_SLOTS.indexOf(lookSlot(S.sel)) < 0 && !petSel) S.sel = 'head';
+  box.innerHTML = ''; box.style.position = 'relative'; const host = meEl('div', 'me'); box.appendChild(host); const W = box.clientWidth, H = box.clientHeight, side = W > H * 1.1, up = !side, small = up && H < 560; host.classList.toggle('up', up); host.classList.toggle('small', small);   // 📱 small upright phones (SE): smaller cards + a slimmer strip
+  const worn = B.worn ? B.worn() : {}, job = s => (!worn[s] && o.weapon) ? o.weapon(s) : null;
+  const avG = () => { let a = dressFor(o.av || {}, B, {}); if(o.arm) try { a = o.arm(a) || a; } catch(e){} return a; }, avL = () => { let a = dressFor(o.av || {}, B, look); if(o.arm) try { a = o.arm(a) || a; } catch(e){} return a; };
+  const col = meEl('div', 'me-col'), dw = up ? W : Math.round(W * 0.58); col.style.width = dw + 'px'; if(!up) col.style.height = '100%'; host.appendChild(col);
+  const stripH = side ? Math.max(66, Math.min(104, Math.round(H * 0.17))) : small ? 62 : 84, dh = up ? Math.round(H * (small ? 0.64 : 0.6)) : H - stripH - 8;
+  const doll = meEl('div', 'me-doll' + (mode === 'look' ? ' look' : '')); doll.style.width = dw + 'px'; doll.style.height = dh + 'px'; col.appendChild(doll);
+  const top = 10, list = mode === 'look' ? ME_SLOTS.filter(x => LOOK_SLOTS.indexOf(x.s) >= 0) : ME_SLOTS, two = side;
+  const Sz = Math.round(two ? Math.max(40, Math.min((dh - top - 71) / 2.44, (dw - Math.max(small ? 96 : 130, dw * 0.3)) / 4 - (small ? 12 : 16), 132)) : Math.max(40, Math.min(W > 600 ? 116 : 82, (dh - top - 6) / 4 - (small ? 25 : 24), dw * 0.25)));
+  const cv = meEl('canvas', 'av'); doll.appendChild(cv); const ax0 = (two ? 2 * (Sz + 14) : Sz + 14) + 10, aw = Math.max(60, dw - 2 * ax0), ah = dh - top - 10;
+  let R;
+  if(S.hide){ cv.style.left = '0px'; cv.style.top = top + 'px'; meAv(cv, mode === 'look' ? avL() : avG(), dw, ah); }
+  else { cv.style.left = ax0 + 'px'; cv.style.top = top + 'px'; R = meAv(cv, mode === 'look' ? avL() : avG(), aw, ah);
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); doll.appendChild(svg);
+    const line = (x1, y1, x2, y2, c) => svg.insertAdjacentHTML('beforeend', '<path d="M' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' Q ' + ((x1 + x2) / 2).toFixed(1) + ' ' + y1.toFixed(1) + ' ' + x2.toFixed(1) + ' ' + y2.toFixed(1) + '" stroke="' + c + '" stroke-width="2.5" stroke-dasharray="5 4" fill="none" stroke-linecap="round"/><circle cx="' + x2.toFixed(1) + '" cy="' + y2.toFixed(1) + '" r="4.5" fill="#fff" stroke="' + c + '" stroke-width="2.5"/>');
+    const place = (arr, left) => { const y0 = top + Sz / 2 + 2, step = (dh - top - 8 - Sz - 18) / 3; arr.forEach((x, i) => { const k = arr.length === 4 ? i : arr.length === 3 ? [0, 1.5, 3][i] : [0.3, 1.4][i];
+        const Z = ME_Z[x.s] || [i % 2, i >> 1], sc = two ? Z[0] : 0, cx = left ? 10 + Sz / 2 + (two ? 1 - sc : 0) * (Sz + 14) : dw - 10 - Sz / 2 - (two ? 1 - sc : 0) * (Sz + 14);
+        const yA = top + Sz / 2 + 2, yB = dh - Sz / 2 - 22, shf = sc ? (Sz + 24) * 0.22 : 0, cy = two ? (Z[1] ? yB - shf : yA + shf) : y0 + step * k;
+        const sl = meEl('button', 'me-slot'); sl.dataset.s = x.s; sl.setAttribute('aria-label', x.n); sl.style.left = (cx - Sz / 2 - 6) + 'px'; sl.style.top = (cy - Sz / 2) + 'px'; sl.style.width = (Sz + 12) + 'px';
+        const it = mode === 'look' ? null : worn[x.s] || null, jb = mode === 'look' ? null : job(x.s), lid = mode === 'look' ? (look[x.s] === '-' ? null : look[x.s] && look[x.s] !== 'g' ? look[x.s] : (worn[x.s] || (x.s === 'acc' ? worn.acc2 : null)) ? lookOf(worn[x.s] || worn.acc2) : null) : null;
+        const has = mode === 'look' ? !!lid : !!(it || jb), c = meEl('div', 'me-card' + (has ? '' : ' empty') + (x.s === S.sel ? ' sel' : '') + (S.pop === x.s ? ' pop' : '')); c.style.width = c.style.height = Sz + 'px'; c.dataset.ic = x.ic; c.style.setProperty('--ic', Math.round(Sz * 0.4) + 'px'); sl.appendChild(c);
+        if(has){ const q = meEl('canvas'); c.appendChild(q); if(it) meCard(q, it, Sz); else if(jb) meFn(q, Sz, (g, n) => { g.fillStyle = '#F2F7FF'; g.fillRect(0, 0, n, n); jb.pic(g, n, n); }); else pic(q, lid, lookSlot(x.s), Sz);
+          c.appendChild(meEl('span', 'me-chip', x.ic)); if(mode === 'look' && look[x.s] && look[x.s] !== 'g' && look[x.s] !== '-') c.appendChild(meEl('span', 'me-mk', '🎨')); if(it) c.appendChild(meEl('span', 'me-lv', 'Lv ' + (it.lv || 1))); }
+        else if(mode === 'look' && look[x.s] === '-') c.appendChild(meEl('span', 'me-mk', '🙈'));
+        sl.appendChild(meEl('span', 'me-lab', x.n)); doll.appendChild(sl); sl.onclick = () => { S.sel = x.s; S.page = 0; sfx('tick'); meTab(box, ctx); };
+        const ax = ax0 + R.x0 + x.at[0] * R.w, ay = top + R.y0 + x.at[1] * R.h, lc = has ? (it ? L.RAR[it.tier].dark : mode === 'look' ? '#E2508F' : '#6F7887') : '#9DB6D0'; line(left ? cx + Sz / 2 + 4 : cx - Sz / 2 - 4, cy, ax, ay, lc); }); };
+    place(list.filter(x => x.side === 'L'), true); place(list.filter(x => x.side === 'R'), false); }
+  S.pop = null;
+  // 🐾 the gold strip: 2 pet slots + power pills (Gear) · how-it-works pills (Look) · 🙈 Hide / 👁️ Show
+  const strip = meEl('div', 'me-strip'); strip.style.height = stripH + 'px'; col.appendChild(strip); const petS = stripH - 22;
+  if(mode === 'gear'){ const P = o.pets; if(P) [0, 1].forEach(k => { const id = (P.slots || [])[k], sl = meEl('button', 'me-slot'); sl.dataset.s = 'pet' + k; sl.setAttribute('aria-label', (P.labels || ['Pet 1', 'Pet 2'])[k]); const c = meEl('div', 'me-card pet' + (id ? '' : ' empty') + (S.sel === 'pet' + k ? ' sel' : '')); c.dataset.ic = '🐾'; c.style.width = c.style.height = petS + 'px'; c.style.setProperty('--ic', Math.round(petS * 0.4) + 'px');
+      if(id){ const q = meEl('canvas'); c.appendChild(q); meFn(q, petS, (g, n) => { g.fillStyle = '#FFF4D6'; g.fillRect(0, 0, n, n); P.pic(g, id, n); }); c.appendChild(meEl('span', 'me-chip', '🐾')); }
+      sl.appendChild(c); sl.appendChild(meEl('span', 'me-lab', (P.labels || ['Pet', 'Pet 2'])[k])); sl.onclick = () => { S.sel = 'pet' + k; S.page = 0; sfx('tick'); meTab(box, ctx); }; strip.appendChild(sl); });
+    /* 🐘 av-pet2: the Pudding switch — 🚶 walks with you · 🏠 stays home at Noi's yard (P.pud = {on, th, pic(g, n), set(on)}) */
+    if(P && P.pud){ const pd = P.pud, sl = meEl('button', 'me-slot me-pud'), c = meEl('div', 'me-card pet pud' + (pd.on ? '' : ' home')), q = meEl('canvas'); sl.dataset.s = 'pud'; sl.setAttribute('aria-label', pd.th ? (pd.on ? 'พุดดิ้งเดินไปด้วย' : 'พุดดิ้งอยู่บ้าน') : (pd.on ? 'Pudding walks with you' : 'Pudding stays home'));
+      c.style.width = c.style.height = petS + 'px'; c.appendChild(q); meFn(q, petS, (g, n) => { g.fillStyle = pd.on ? '#EAF7E2' : '#ECE6F6'; g.fillRect(0, 0, n, n); pd.pic(g, n); }); c.appendChild(meEl('span', 'me-chip', pd.on ? '🚶' : '🏠'));
+      sl.appendChild(c); sl.appendChild(meEl('span', 'me-lab', pd.th ? (pd.on ? 'เดินด้วย' : 'อยู่บ้าน') : (pd.on ? 'Walks' : 'Home'))); sl.onclick = () => { pd.on = !pd.on; pd.set(pd.on); sfx('pop'); meTab(box, ctx); }; strip.appendChild(sl); }
+    let pills = o.stats ? o.stats() : null; if(!pills){ let pw = 0; Object.keys(worn).forEach(s => { try { pw += L.power(worn[s]); } catch(e){} }); const st = sets(worn).filter(x => x.have >= 2).length; pills = [['⚔️', pw]].concat(st ? [['🧩', st]] : []); }
+    if(small || W < 380) pills = pills.filter(p => ['👟', '🍀'].indexOf(p[0]) < 0).slice(0, 4); if(P && P.pud && W < 420) pills = pills.slice(0, 2);   /* 🐘 av-pet2: room for the Pudding switch on small phones */ strip.appendChild(meEl('div', 'me-pows', pills.map(p => '<span>' + p[0] + ' ' + p[1] + '</span>').join(''))); }
+  else strip.appendChild(meEl('div', 'me-pows look', '<span>👀 how others see you</span><span>🎨 = a look you picked</span><span>⚔️ battles use your Gear</span>'));
+  const eye = meEl('button', 'me-eye' + (S.hide ? ' on' : ''), S.hide ? '👁️ Show' : '🙈 Hide'); eye.setAttribute('aria-label', S.hide ? 'Show the slots' : 'Hide the slots'); eye.onclick = () => { S.hide = !S.hide; sfx('tick'); meTab(box, ctx); }; strip.appendChild(eye);
+  // 🔎 the bag grid — sorted to the picked slot
+  const bag = meEl('div', 'me-bag'); host.appendChild(bag); const cols = up ? 5 : Math.max(3, Math.min(6, Math.round((W - dw) / 95))), bw = up ? W : W - dw - 10, cw = (bw - (cols - 1) * 6) / cols;
+  bag.innerHTML = '<h4>x</h4>'; const hh = bag.firstChild.offsetHeight || 30, bh = bag.clientHeight || (up ? H - dh - stripH - 16 : H), rows = Math.max(1, Math.floor((bh - hh - 14) / (cw + 6))), per = cols * rows;   // the real room left (measured)
+  const SL = ME_SLOTS.find(x => x.s === S.sel), cells = [];   // {pic(cv, px), on, dim, mark, tap}
+  if(petSel){ const P = o.pets || {list: []}, k = +S.sel.slice(3), cur = (P.slots || [])[k];
+    (P.list || []).forEach(pt => { const other = (P.slots || [])[1 - k] === pt.id; cells.push({pic: (q, px) => meFn(q, px, (g, n) => P.pic(g, pt.id, n)), on: cur === pt.id, dim: other, label: pt.name, tap: () => { if(other) return ctx.note && ctx.note('🐾 Already in the other pet slot'); P.pick(k, cur === pt.id ? null : pt.id); sfx('pop'); S.pop = null; meTab(box, ctx); }}); });
+    bag.innerHTML = '<h4>🐾 ' + (P.labels || ['Pet', 'Pet 2'])[k] + ' <small>' + (P.list || []).length + ' friends</small></h4>'; }
+  else if(mode === 'look'){ const s = lookSlot(S.sel), own = owned(B, {jobs: o.jobs})[s] || [], cur = look[S.sel];
+    const set = v => { if(v === 'g') delete look[S.sel]; else look[S.sel] = v; if(o.onLook) o.onLook(Object.assign({}, look)); sfx('pop'); S.pop = S.sel; meTab(box, ctx); };
+    cells.push({txt: '<b>⚙️</b>my gear', on: !cur || cur === 'g', tap: () => set('g')});
+    own.forEach(id => cells.push({pic: (q, px) => pic(q, id, s, px), on: cur === id, tap: () => set(id)}));
+    cells.push({txt: '<b>🙈</b>hide', on: cur === '-', tap: () => set('-')});
+    bag.innerHTML = '<h4>' + SL.ic + ' ' + SL.n + ' <small>' + own.length + ' looks</small></h4>'; }
+  else { const s = S.sel, cur = worn[s], all = B.g.map((it, i) => ({it, i})), a = all.filter(x => meFits(x.it, s)).sort((x, y) => (x.it.w === s ? -1 : y.it.w === s ? 1 : 0) || (y.it.tier - x.it.tier) || ((y.it.lv || 1) - (x.it.lv || 1))), b = all.filter(x => !meFits(x.it, s));
+    a.forEach(x => cells.push({it: x.it, on: x.it.w === s, mark: x.it.w === s ? 'ck' : (cur && (x.it.tier > cur.tier || (x.it.tier === cur.tier && L.power(x.it) > L.power(cur))) || !cur ? 'up' : 'sw'), tap: () => {
+      if(x.it.w === s) return ctx.go ? ctx.go('gear', x.i) : null; B.wear(x.i, s); sfx('pop'); S.pop = s; if(o.onChange) o.onChange(B); meTab(box, ctx); }}));
+    b.forEach(x => cells.push({it: x.it, dim: true, tap: () => { const d = slotOf(x.it); const to = ME_SLOTS.find(z => z.s === d) ? d : d === 'acc2' ? 'acc2' : null; if(to){ S.sel = to; S.page = 0; sfx('tick'); meTab(box, ctx); } else if(ctx.go) ctx.go('gear', x.i); }}));
+    const n = a.length, jb = job(s); bag.innerHTML = '<h4>' + SL.ic + ' ' + SL.n + ' <small>' + (n ? n + ' to wear' : jb ? '⚔️ ' + jb.name + ' (your job)' : 'none yet — find one!') + '</small></h4>'; }
+  const pages = Math.max(1, Math.ceil(cells.length / per)); S.page = Math.min(S.page, pages - 1); const h4 = bag.querySelector('h4');
+  if(pages > 1){ const pv = meEl('button', '', '‹'), nx = meEl('button', '', '›'); pv.disabled = S.page <= 0; nx.disabled = S.page >= pages - 1; pv.setAttribute('aria-label', 'Previous page'); nx.setAttribute('aria-label', 'Next page');
+    pv.onclick = () => { S.page--; meTab(box, ctx); }; nx.onclick = () => { S.page++; meTab(box, ctx); }; const pg = meEl('span', 'me-pg'); pg.appendChild(pv); pg.appendChild(meEl('small', '', (S.page + 1) + '/' + pages)); pg.appendChild(nx); h4.appendChild(pg); }
+  if(mode === 'gear' && !petSel && ctx.go){ const al = meEl('button', 'me-all', '🎒 All'); al.setAttribute('aria-label', 'The whole bag'); al.onclick = () => ctx.go('gear'); h4.appendChild(al); }
+  const gr = meEl('div', 'me-grid'); gr.style.gridTemplateColumns = 'repeat(' + cols + ',1fr)'; bag.appendChild(gr);
+  for(let k = 0; k < per; k++){ const cI = cells[S.page * per + k], c = meEl('button', 'me-cell'); gr.appendChild(c); if(!cI){ c.disabled = true; continue; }
+    if(cI.dim) c.classList.add('dim'); if(cI.on) c.classList.add('on'); if(cI.txt) c.appendChild(meEl('span', 'tx', cI.txt));
+    else { const q = meEl('canvas'); c.appendChild(q); if(cI.it) meCard(q, cI.it, cw); else if(cI.pic) cI.pic(q, cw); }
+    if(cI.mark === 'ck' || (cI.on && !cI.it)) c.appendChild(meEl('span', 'ck', '✓')); else if(cI.mark === 'up') c.appendChild(meEl('span', 'up', '▲')); else if(cI.mark === 'sw') c.appendChild(meEl('span', 'up', '⇄'));
+    if(cI.it){ const d = def(cI.it); c.appendChild(meEl('span', 'si', SLOT_ICON[d && d.slot] || '')); }
+    if(cI.label) c.setAttribute('aria-label', cI.label); c.onclick = cI.tap; }
+  if(!cells.length) gr.appendChild(meEl('div', 'me-empty', petSel ? '🐾 No pet friends yet' : '🎒 Nothing yet'));
+  box.__meState = () => ({mode: S.mode, sel: S.sel, hide: S.hide, page: S.page, pages, cells: cells.length, size: Sz, two}); }
+L.tabAdd({k: 'me', icon: '⚔️', label: 'Gear', lead: true, hides: ['look'], only: o => !!(o && o.av && o.doll !== false), render: meTab,
+  button(b, ctx){ const S = meState(ctx.o); b.classList.add('lk-lead'); b.setAttribute('aria-label', S.mode === 'look' ? 'Look — tap for Gear' : 'Gear — tap for Look'); b.title = 'Gear ⇄ Look';
+    b.innerHTML = '<span class="me-lr"><span class="h g' + (S.mode === 'look' ? '' : ' on') + '"><b>⚔️</b><em>Gear</em></span><span class="h l' + (S.mode === 'look' ? ' on' : '') + '"><b>👗</b><em>Look</em></span></span>'; },
+  onTab(ctx, here){ const S = meState(ctx.o); if(here){ S.mode = S.mode === 'look' ? 'gear' : 'look'; S.page = 0; if(S.mode === 'look' && LOOK_SLOTS.indexOf(lookSlot(S.sel)) < 0) S.sel = 'head'; sfx('tick'); } return false; }});
 L.tabAdd({k: 'look', icon: '👗', label: 'Look', only: o => !!(o && (o.av || o.look)), render: lookTab});
 /* ---------------- 📇 card rows (set progress · gate piece · ✦) ---------------- */
 L.cardRow(function(it, B){ const d = def(it); if(!d || d.kind !== 'wear') return ''; let h = '';
@@ -389,6 +543,6 @@ function dropper(V, M, o){ o = o || {}; const live = [], D = {live, items: [], n
 function chip(box, it, x, y, where){ css(); const d = def(it) || {}, R = L.RAR[it.tier | 0] || {}, c = document.createElement('div'); c.className = 'lw-chip' + (where === 'mail' ? ' mail' : '');
   c.textContent = where === 'mail' ? '📬 ' + (d.name || 'item') + ' → inn mailbox' : '+1 ' + (d.slot ? SLOT_ICON[d.slot] + ' ' : '') + (d.name || 'item') + ' ' + (R.icon || ''); c.style.left = x + 'px'; c.style.top = y + 'px';
   (box || document.body).appendChild(c); setTimeout(() => c.remove(), 1500); return c; }
-window.LootWear = {VERSION, IDS, SETS, ISL, MAIN, SLOT_ICON, SLOT_NAME, LOOK_SLOTS, lookOf, slotOf, sets, bonus, owned, dressFor, bagSheet, lookTab, skySet, chooseSheet, freeCell, dropper, chip,
+window.LootWear = {VERSION, meTab, ME_SLOTS, IDS, SETS, ISL, MAIN, SLOT_ICON, SLOT_NAME, LOOK_SLOTS, lookOf, slotOf, sets, bonus, owned, dressFor, bagSheet, lookTab, skySet, chooseSheet, freeCell, dropper, chip,
   beam: BEAM.beam, BEAM_LIFE: BEAM.LIFE, BEAM_RAMP: BEAM.RAMP, MAX_DROPS};
 })();

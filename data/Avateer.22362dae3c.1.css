@@ -35,6 +35,12 @@
   #stick .knob{position:absolute;left:50%;top:50%;width:44%;height:44%;margin:-22% 0 0 -22%;border-radius:50%;background:linear-gradient(180deg,#FFB547,#FF8A2A);box-shadow:0 4px 0 #C85F12;pointer-events:none;}
   #btns{position:absolute;right:calc(var(--pad-edge,24px) + env(safe-area-inset-right));bottom:calc(var(--pad-edge,24px) + var(--safe-b,0px));z-index:25;}
   #b-swing.locked{filter:grayscale(.85);opacity:.72;} #b-swing.locked:after{content:'🔒';position:absolute;right:-4px;top:-6px;font-size:15px;}
+  /* ✋ av-int1: the interact petal — dim with just ✋ until something is in reach, then gold + the action's word · desk key caps (E · Q · F · ␣) */
+  #b-act.int-off .pz-pf{fill-opacity:.55;} #b-act.int-off .ic{opacity:.6;} #b-act.int-off .nm{opacity:.55;}
+  #b-act.int-on .pz-pf{fill:#5A3E00;fill-opacity:.92;stroke:#FFD23F;stroke-width:4;} #b-act.int-on .nm{color:#FFE58A;}
+  #b-swing.int-on:not(.locked) .pz-pf{stroke:#FF6B5B;stroke-width:5;}
+  #btns .kc{display:inline-block;margin-left:4px;padding:0 4px;border-radius:5px;background:rgba(255,255,255,.88);color:#2B2D42;font:800 .9em/1.25 ui-monospace,Menlo,monospace;text-shadow:none;vertical-align:1px;}
+  #b-act.int-no{animation:int-no .35s ease;} @keyframes int-no{25%{translate:-4px 0;}75%{translate:4px 0;}}
   #emotes{position:absolute;z-index:27;display:flex;gap:6px;padding:6px;border-radius:20px;}
   #emotes button{min-width:48px;min-height:48px;font-size:1.35rem;padding:4px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;}
   #emotes button small{font-size:.62rem;font-weight:700;}
