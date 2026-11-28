@@ -1,0 +1,23 @@
+
+  /* 🔍 gr-16: slim search bar above the filter row (all 7 sizes, one row, never sideways) */
+  .gs-wrap{margin:20px 0 0;}
+  .gs-bar{display:flex;align-items:center;gap:6px;min-height:46px;padding:0 6px 0 14px;border-radius:999px;background:var(--card);
+    border:2px solid var(--card-border, rgba(55,71,79,0.12));box-shadow:0 3px 0 rgba(55,71,79,0.10);transition:border-color .15s, box-shadow .15s;}
+  .gs-bar:focus-within{border-color:var(--terracotta);box-shadow:0 3px 0 rgba(55,71,79,0.10), 0 0 0 4px color-mix(in srgb, var(--terracotta) 22%, transparent);}
+  .gs-bar .gs-ic{font-size:1.15rem;line-height:1;flex:0 0 auto;}
+  .gs-bar input{flex:1 1 auto;min-width:0;border:none;outline:none;background:transparent;color:var(--ink);font:700 16px/1.2 var(--font-body, Nunito, sans-serif);padding:11px 2px;-webkit-appearance:none;appearance:none;}
+  .gs-bar input::placeholder{color:var(--ink-soft);opacity:.85;font-weight:700;}
+  .gs-bar input::-webkit-search-cancel-button{display:none;-webkit-appearance:none;}
+  .gs-bar .gs-x{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;background:var(--panel, rgba(55,71,79,0.08));color:var(--ink);font-weight:900;font-size:.95rem;line-height:1;}
+  .gs-bar .gs-x[hidden]{display:none;}
+  .gs-bar .gs-n{flex:0 0 auto;font-weight:900;font-size:.78rem;color:var(--on-accent, #fff);background:var(--terracotta);border-radius:999px;padding:3px 9px;white-space:nowrap;}
+  .gs-bar .gs-n[hidden]{display:none;}
+  html .gs-wrap + .filters{margin-top:10px !important;}
+  .gs-on .filters .pill.active{box-shadow:0 3px 0 rgba(55,71,79,0.10) !important;}
+  @media (max-height:700px){ .gs-bar{min-height:40px;} .gs-bar input{padding:8px 2px;} .gs-bar .gs-x{width:30px;height:30px;} }
+  @media (max-width:430px){ .gs-bar{padding-left:11px;} .gs-bar .gs-n{padding:3px 7px;} }
+  /* nothing found → wish card */
+  .gs-none{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .gs-none .gs-th{font-weight:700;opacity:.8;font-size:.92rem;}
+  .gs-none .gs-tell{margin-top:6px;}
+  .grp-head[data-grp="search"] small{max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
